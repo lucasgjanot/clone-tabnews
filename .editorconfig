@@ -1,0 +1,5 @@
+root = true
+
+[*]
+indent_syle = space
+indent_size = 2
