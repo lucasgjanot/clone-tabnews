@@ -5,6 +5,6 @@ describe("API GET TESTS", () => {
     const responseJson = await response.json();
 
     expect(statusCode).toBe(200);
-    expect(responseJson).toEqual({ status: "OK" });
+    expect(responseJson).toEqual({ APIstatus: "OK", DBstatus: "OK" });
   });
 });
