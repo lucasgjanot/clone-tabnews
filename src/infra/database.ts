@@ -1,4 +1,4 @@
-const cfg = require("../config.ts");
+const cfg = require("config.ts");
 import { Client } from "pg";
 
 async function query(queryObject: string) {

@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import database from "../../../infra/database";
+import database from "infra/database";
 
 export type statusResponse = {
   status: string;

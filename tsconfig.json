@@ -13,7 +13,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "isolatedModules": true,
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "paths": {
       "@/*": ["src/*"]
     },
