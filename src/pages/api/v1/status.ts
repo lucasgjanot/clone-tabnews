@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import database from "infra/database";
-const cfg = require("config.ts");
+import { db } from "config";
 
 export type statusResponse = {
   updated_at: string;
@@ -29,10 +29,10 @@ async function statusHandler(_: NextApiRequest, res: NextApiResponse) {
       databaseMaxConnectionsResult.rows[0].max_connections;
   }
 
-  const databaseName = cfg.db.database;
+  const databaseName = db.database;
   const databaseOpenedConnectionsResult = await database.query({
     text: "SELECT count(*) FROM pg_stat_activity WHERE datname=$1",
-    values: [databaseName],
+    values: [databaseName as string],
   });
   let databaseOpenedConnectionsValue = "Error";
   if (databaseOpenedConnectionsResult) {

@@ -1,4 +1,4 @@
-const cfg = require("config.ts");
+import { db } from "config";
 import { Client } from "pg";
 
 type QueryObject = {
@@ -7,7 +7,7 @@ type QueryObject = {
 };
 
 async function query(queryObject: QueryObject | string) {
-  const client = new Client(cfg.db);
+  const client = new Client(db);
   try {
     await client.connect();
     const result = await client.query(queryObject);

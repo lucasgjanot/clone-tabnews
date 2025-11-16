@@ -6,7 +6,7 @@ type DatabaseConfig = {
   password: string | undefined;
 };
 
-const db: DatabaseConfig = {
+export const db: DatabaseConfig = {
   host: process.env.POSTGRES_HOST,
   port: Number(process.env.POSTGRES_PORT),
   database: process.env.POSTGRES_DB,
@@ -14,4 +14,4 @@ const db: DatabaseConfig = {
   password: process.env.POSTGRES_PASSWORD,
 };
 
-module.exports = { db };
+//module.exports = { db };
