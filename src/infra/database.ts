@@ -1,21 +1,25 @@
 const cfg = require("config.ts");
 import { Client } from "pg";
 
-async function query(queryObject: string) {
-  const client = new Client(cfg.db);
-  await client.connect();
-  const result = await client.query(queryObject);
-  await client.end();
-  return result;
-}
+type QueryObject = {
+  text: string;
+  values: string[];
+};
 
-async function testConnection() {
-  const result = await query("SELECT 1+1;");
-  if (!result) return false;
-  return true;
+async function query(queryObject: QueryObject | string) {
+  const client = new Client(cfg.db);
+  try {
+    await client.connect();
+    const result = await client.query(queryObject);
+    return result;
+  } catch (err) {
+    console.error(err);
+    return;
+  } finally {
+    await client.end();
+  }
 }
 
 export default {
   query,
-  testConnection,
 };
