@@ -7,14 +7,14 @@ type QueryObject = {
 };
 
 async function query(queryObject: QueryObject | string) {
-  const client = new Client(db);
+  const client = new Client({ ...db, ssl: { rejectUnauthorized: false } });
   try {
     await client.connect();
     const result = await client.query(queryObject);
     return result;
   } catch (err) {
     console.error(err);
-    return;
+    throw err;
   } finally {
     await client.end();
   }
