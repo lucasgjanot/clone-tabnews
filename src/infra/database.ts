@@ -1,4 +1,4 @@
-import { db } from "config";
+import { cfg } from "config";
 import { Client } from "pg";
 
 type QueryObject = {
@@ -7,7 +7,10 @@ type QueryObject = {
 };
 
 async function query(queryObject: QueryObject | string) {
-  const client = new Client({ ...db, ssl: { rejectUnauthorized: false } });
+  const client = new Client({
+    ...cfg.db,
+    ssl: cfg.environment === "development" ? false : true,
+  });
   try {
     await client.connect();
     const result = await client.query(queryObject);

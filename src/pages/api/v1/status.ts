@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import database from "infra/database";
-import { db } from "config";
+import { cfg } from "config";
 
 export type statusResponse = {
   updated_at: string;
@@ -22,7 +22,7 @@ async function statusHandler(_: NextApiRequest, res: NextApiResponse) {
     );
     const databaseMaxConnectionsValue =
       databaseMaxConnectionsResult.rows[0].max_connections;
-    const databaseName = db.database;
+    const databaseName = cfg.db.database;
     const databaseOpenedConnectionsResult = await database.query({
       text: "SELECT count(*) FROM pg_stat_activity WHERE datname=$1",
       values: [databaseName as string],
