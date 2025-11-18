@@ -9,7 +9,7 @@ type QueryObject = {
 async function query(queryObject: QueryObject | string) {
   const client = new Client({
     ...cfg.db,
-    ssl: cfg.environment === "development" ? false : true,
+    ssl: getSSLValues(),
   });
   try {
     await client.connect();
@@ -26,3 +26,12 @@ async function query(queryObject: QueryObject | string) {
 export default {
   query,
 };
+
+function getSSLValues() {
+  if (process.env.POSTGRES_CA) {
+    return {
+      ca: process.env.POSTGRES_CA,
+    };
+  }
+  return process.env.NODE_ENV === "development" ? true : true;
+}
