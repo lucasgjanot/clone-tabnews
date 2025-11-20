@@ -4,19 +4,21 @@ type Config = {
 };
 
 type DatabaseConfig = {
-  host: string | undefined;
-  port: number | undefined;
-  user: string | undefined;
-  database: string | undefined;
-  password: string | undefined;
+  host: string;
+  port: number;
+  user: string;
+  database: string;
+  password: string;
+  databaseURL: string;
 };
 
 const db: DatabaseConfig = {
-  host: process.env.POSTGRES_HOST,
-  port: Number(process.env.POSTGRES_PORT),
-  database: process.env.POSTGRES_DB,
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
+  host: envOrThrow("POSTGRES_HOST"),
+  port: Number(envOrThrow("POSTGRES_PORT")),
+  database: envOrThrow("POSTGRES_DB"),
+  user: envOrThrow("POSTGRES_USER"),
+  password: envOrThrow("POSTGRES_PASSWORD"),
+  databaseURL: envOrThrow("DATABASE_URL"),
 };
 
 export const cfg: Config = {
@@ -24,4 +26,10 @@ export const cfg: Config = {
   environment: process.env.NODE_ENV,
 };
 
-//module.exports = { db };
+function envOrThrow(key: string) {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Environment variable ${key} is not set`);
+  }
+  return value;
+}
