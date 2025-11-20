@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import database from "infra/database";
 import { cfg } from "config";
 
-export type statusResponse = {
+type StatusResponse = {
   updated_at: string;
   dependencies: {
     database: {
@@ -13,7 +13,10 @@ export type statusResponse = {
   };
 };
 
-async function statusHandler(_: NextApiRequest, res: NextApiResponse) {
+async function statusHandler(
+  _: NextApiRequest,
+  res: NextApiResponse<StatusResponse>,
+) {
   try {
     const databaseVersionResult = await database.query("SHOW server_version;");
     const databaseVersionValue = databaseVersionResult.rows[0].server_version;
@@ -38,7 +41,7 @@ async function statusHandler(_: NextApiRequest, res: NextApiResponse) {
           opened_connections: parseInt(databaseOpenedConnectionsValue),
         },
       },
-    } satisfies statusResponse);
+    });
   } catch (err) {
     res.status(200).json({
       updated_at: new Date().toISOString(),
@@ -49,7 +52,7 @@ async function statusHandler(_: NextApiRequest, res: NextApiResponse) {
           opened_connections: "Error",
         },
       },
-    } satisfies statusResponse);
+    });
   }
 }
 
