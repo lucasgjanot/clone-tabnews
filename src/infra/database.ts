@@ -33,5 +33,5 @@ function getSSLValues() {
       ca: process.env.POSTGRES_CA,
     };
   }
-  return cfg.environment === "development" ? false : true;
+  return cfg.environment === "production" ? true : false;
 }

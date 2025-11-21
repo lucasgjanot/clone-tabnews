@@ -1,23 +1,40 @@
 import { cfg } from "config";
 import { NextApiRequest, NextApiResponse } from "next";
-import migrationRunner from "node-pg-migrate";
+import migrationRunner, { RunnerOption } from "node-pg-migrate";
+import { RunMigration } from "node-pg-migrate/dist/migration";
 import { join } from "node:path";
 
-type MigrationsResponse = string[];
+type MigrationsResponse = RunMigration[];
 
 async function migrationsHandler(
-  _: NextApiRequest,
+  req: NextApiRequest,
   res: NextApiResponse<MigrationsResponse>,
 ) {
-  console.log(process.cwd());
-  const migrations = await migrationRunner({
+  const defaultMigrationOptions: RunnerOption = {
     databaseUrl: cfg.db.databaseURL,
     dryRun: true,
     dir: join(process.cwd(), "src", "infra", "migrations"),
     direction: "up",
     migrationsTable: "pgmigrations",
     verbose: true,
-  });
-  res.status(200).json([]);
+  };
+
+  if (req.method === "GET") {
+    const pendingMigrations = await migrationRunner(defaultMigrationOptions);
+    return res.status(200).json(pendingMigrations);
+  }
+  if (req.method === "POST") {
+    const migratedMigrations = await migrationRunner({
+      ...defaultMigrationOptions,
+      dryRun: false,
+    });
+
+    if (migratedMigrations.length > 0) {
+      return res.status(201).json(migratedMigrations);
+    }
+    return res.status(200).json(migratedMigrations);
+  }
+  return res.status(405).end();
 }
+
 export default migrationsHandler;
