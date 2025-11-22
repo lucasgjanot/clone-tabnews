@@ -7,24 +7,33 @@ type QueryObject = {
 };
 
 async function query(queryObject: QueryObject | string) {
-  const client = new Client({
-    ...cfg.db,
-    ssl: getSSLValues(),
-  });
+  let client: Client | undefined;
   try {
-    await client.connect();
+    client = await getNewClient();
     const result = await client.query(queryObject);
     return result;
   } catch (err) {
     console.error(err);
     throw err;
   } finally {
-    await client.end();
+    if (client) {
+      await client.end();
+    }
   }
+}
+
+async function getNewClient() {
+  const client = new Client({
+    ...cfg.db,
+    ssl: getSSLValues(),
+  });
+  await client.connect();
+  return client;
 }
 
 export default {
   query,
+  getNewClient,
 };
 
 function getSSLValues() {
