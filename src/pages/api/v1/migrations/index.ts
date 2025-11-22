@@ -38,6 +38,7 @@ async function migrationsHandler(
     }
     return res.status(200).json(migratedMigrations);
   }
+  console.log(dbClient);
   return res.status(405).end();
 }
 
