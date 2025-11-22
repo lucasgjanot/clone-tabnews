@@ -9,7 +9,6 @@ type DatabaseConfig = {
   user: string;
   database: string;
   password: string;
-  databaseURL: string;
 };
 
 const db: DatabaseConfig = {
@@ -18,7 +17,6 @@ const db: DatabaseConfig = {
   database: envOrThrow("POSTGRES_DB"),
   user: envOrThrow("POSTGRES_USER"),
   password: envOrThrow("POSTGRES_PASSWORD"),
-  databaseURL: envOrThrow("DATABASE_URL"),
 };
 
 export const cfg: Config = {
