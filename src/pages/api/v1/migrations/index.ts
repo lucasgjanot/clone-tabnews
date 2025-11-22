@@ -39,7 +39,7 @@ async function migrationsHandler(
     return res.status(200).json(migratedMigrations);
   }
 
-  return res.status(405).json([]);
+  return res.status(405).end();
 }
 
 export default migrationsHandler;
