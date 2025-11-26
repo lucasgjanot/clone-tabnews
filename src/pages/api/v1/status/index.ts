@@ -15,7 +15,7 @@ type StatusResponse = {
 
 async function statusHandler(
   _: NextApiRequest,
-  res: NextApiResponse<StatusResponse>,
+  res: NextApiResponse<StatusResponse | { error: "error" }>,
 ) {
   try {
     const databaseVersionResult = await database.query("SHOW server_version;");
