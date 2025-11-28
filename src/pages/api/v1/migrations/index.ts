@@ -3,7 +3,6 @@ import migrationRunner, { RunnerOption } from "node-pg-migrate";
 import { RunMigration } from "node-pg-migrate/dist/migration";
 import { join } from "node:path";
 import database from "infra/database";
-import { Client } from "pg";
 
 type MigrationsResponse = RunMigration[];
 
