@@ -32,6 +32,8 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
     "@types/async-retry": "^1.4.9",
     "@types/jest": "^30.0.0",
     "@types/next": "^8.0.7",
