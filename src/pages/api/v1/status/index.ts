@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import database from "infra/database";
 import { cfg } from "config";
 
-type StatusResponse = {
+export type StatusResponse = {
   updated_at: string;
   dependencies: {
     database: {
