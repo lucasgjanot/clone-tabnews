@@ -1,21 +1,29 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import database from "infra/database";
 import { cfg } from "config";
+import { InternalServerError } from "infra/errors";
+
+export type ErrorResponse = {
+  name: string;
+  message: string;
+  action: string;
+  status_code: number;
+};
 
 export type StatusResponse = {
   updated_at: string;
   dependencies: {
     database: {
       version: string;
-      max_connections: number | "Error";
-      opened_connections: number | "Error";
+      max_connections: number;
+      opened_connections: number;
     };
   };
 };
 
 async function statusHandler(
   _: NextApiRequest,
-  res: NextApiResponse<StatusResponse | { error: "error" }>,
+  res: NextApiResponse<StatusResponse | ErrorResponse>,
 ) {
   try {
     const databaseVersionResult = await database.query("SHOW server_version;");
@@ -43,16 +51,9 @@ async function statusHandler(
       },
     });
   } catch (err) {
-    res.status(200).json({
-      updated_at: new Date().toISOString(),
-      dependencies: {
-        database: {
-          version: "Error",
-          max_connections: "Error",
-          opened_connections: "Error",
-        },
-      },
-    });
+    const publicErrorObject = new InternalServerError({ cause: err as Error });
+    console.error("Error fetching database status:", publicErrorObject);
+    res.status(publicErrorObject.statusCode).json(publicErrorObject.toJSON());
   }
 }
 
