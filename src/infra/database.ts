@@ -12,8 +12,6 @@ async function query(queryObject: QueryObject | string) {
     client = await getNewClient();
     const result = await client.query(queryObject);
     return result;
-  } catch (err) {
-    throw err;
   } finally {
     await client?.end();
   }
