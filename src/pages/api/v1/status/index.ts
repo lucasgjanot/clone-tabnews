@@ -2,7 +2,8 @@ import { createRouter } from "next-connect";
 import { NextApiRequest, NextApiResponse } from "next";
 import database from "infra/database";
 import { cfg } from "config";
-import { errorHandler, ErrorResponse, notAllowedHandler } from "infra/errors";
+import { ErrorResponse } from "infra/errors";
+import controller from "infra/controller";
 
 export type StatusResponse = {
   updated_at: string;
@@ -19,10 +20,7 @@ const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router.get(getHandler);
 
-export default router.handler({
-  onNoMatch: notAllowedHandler,
-  onError: errorHandler,
-});
+export default router.handler(controller.errorHandlers);
 
 async function getHandler(
   _: NextApiRequest,

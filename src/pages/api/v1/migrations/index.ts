@@ -4,7 +4,8 @@ import migrationRunner, { RunnerOption } from "node-pg-migrate";
 import { RunMigration } from "node-pg-migrate/dist/migration";
 import { resolve } from "node:path";
 import database from "infra/database";
-import { errorHandler, ErrorResponse, notAllowedHandler } from "infra/errors";
+import { ErrorResponse } from "infra/errors";
+import controller from "infra/controller";
 
 type MigrationsResponse = RunMigration[];
 
@@ -18,13 +19,10 @@ const postHandler = handleMigration(false);
 
 router.get(getHandler).post(postHandler);
 
-export default router.handler({
-  onNoMatch: notAllowedHandler,
-  onError: errorHandler,
-});
+export default router.handler(controller.errorHandlers);
 
 function handleMigration(dryRun: boolean) {
-  return async (req: NextApiRequest, res: NextApiResponse) => {
+  return async (_: NextApiRequest, res: NextApiResponse) => {
     const migrations = await runMigration(dryRun);
     const status = !dryRun && migrations.length > 0 ? 201 : 200;
     return res.status(status).json(migrations);
