@@ -1,5 +1,3 @@
-import { NextApiRequest, NextApiResponse } from "next";
-
 export type ErrorResponse = {
   name: string;
   message: string;
@@ -7,7 +5,7 @@ export type ErrorResponse = {
   status_code: number;
 };
 
-class BaseHttpError extends Error {
+export class BaseHttpError extends Error {
   action: string;
   statusCode: number;
 
@@ -41,12 +39,12 @@ class BaseHttpError extends Error {
 }
 
 export class InternalServerError extends BaseHttpError {
-  constructor({ cause }: { cause?: Error }) {
+  constructor({ cause, statusCode }: { cause?: Error; statusCode?: number }) {
     super({
       name: "InternalServerError",
       message: "Unexpected Error",
       action: "Contact support for help",
-      statusCode: 500,
+      statusCode: statusCode || 500,
       cause: cause,
     });
   }
@@ -63,21 +61,14 @@ export class MethodNotAllowedError extends BaseHttpError {
   }
 }
 
-export function errorHandler(
-  err: unknown,
-  _: NextApiRequest,
-  res: NextApiResponse,
-) {
-  const internalServerError = new InternalServerError({ cause: err as Error });
-  console.error(internalServerError);
-  res.status(internalServerError.statusCode).json(internalServerError.toJSON());
-}
-
-export function notAllowedHandler(req: NextApiRequest, res: NextApiResponse) {
-  const methodNotAllowedError = new MethodNotAllowedError({
-    method: req.method as string,
-  });
-  res
-    .status(methodNotAllowedError.statusCode)
-    .json(methodNotAllowedError.toJSON());
+export class ServiceError extends BaseHttpError {
+  constructor({ cause, message }: { cause?: Error; message?: string }) {
+    super({
+      name: "ServiceError",
+      message: message || "Service unavailable",
+      action: "Verify if service is available",
+      statusCode: 503,
+      cause: cause,
+    });
+  }
 }
