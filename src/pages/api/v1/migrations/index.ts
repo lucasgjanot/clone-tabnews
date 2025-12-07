@@ -1,11 +1,9 @@
 import { createRouter } from "next-connect";
 import { NextApiRequest, NextApiResponse } from "next";
-import migrationRunner, { RunnerOption } from "node-pg-migrate";
 import { RunMigration } from "node-pg-migrate/dist/migration";
-import { resolve } from "node:path";
-import database from "infra/database";
 import { ErrorResponse } from "infra/errors";
 import controller from "infra/controller";
+import migrator from "models/migrator";
 
 type MigrationsResponse = RunMigration[];
 
@@ -14,46 +12,19 @@ const router = createRouter<
   NextApiResponse<MigrationsResponse | ErrorResponse>
 >();
 
-const getHandler = handleMigration(true);
-const postHandler = handleMigration(false);
-
 router.get(getHandler).post(postHandler);
 
 export default router.handler(controller.errorHandlers);
 
-function handleMigration(dryRun: boolean) {
-  return async (_: NextApiRequest, res: NextApiResponse) => {
-    const migrations = await runMigration(dryRun);
-    const status = !dryRun && migrations.length > 0 ? 201 : 200;
-    return res.status(status).json(migrations);
-  };
+async function getHandler(_: NextApiRequest, res: NextApiResponse) {
+  const pendingMigrations = await migrator.listPendingMigrations();
+  return res.status(200).json(pendingMigrations);
 }
 
-async function runMigration(dryRun: boolean = true): Promise<RunMigration[]> {
-  let dbClient;
-  try {
-    dbClient = await database.getNewClient();
-    const defaultMigrationOptions: RunnerOption = {
-      dbClient,
-      dryRun: true,
-      dir: resolve("src", "infra", "migrations"),
-      direction: "up",
-      migrationsTable: "pgmigrations",
-      verbose: true,
-    };
-    if (dryRun) {
-      const pendingMigrations = await migrationRunner(defaultMigrationOptions);
-      return pendingMigrations;
-    }
-    const migratedMigrations = await migrationRunner({
-      ...defaultMigrationOptions,
-      dryRun: false,
-    });
-    return migratedMigrations;
-  } catch (err) {
-    console.error((err as Error).message);
-    throw err;
-  } finally {
-    await dbClient?.end();
+async function postHandler(_: NextApiRequest, res: NextApiResponse) {
+  const migratedMigrations = await migrator.runPendingMigrations();
+  if (migratedMigrations.length === 0) {
+    return res.status(200).json(migratedMigrations);
   }
+  return res.status(201).json(migratedMigrations);
 }
