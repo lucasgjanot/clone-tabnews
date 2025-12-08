@@ -3,15 +3,19 @@ import {
   InternalServerError,
   MethodNotAllowedError,
   BaseHttpError,
+  ValidationError,
 } from "./errors";
 
 function onErrorHandler(err: unknown, _: NextApiRequest, res: NextApiResponse) {
+  if (err instanceof ValidationError) {
+    return res.status(err.statusCode).json(err);
+  }
   const publicErrorObject = new InternalServerError({
     cause: err as Error,
     statusCode: (err as BaseHttpError).statusCode,
   });
   console.error(publicErrorObject);
-  res.status(publicErrorObject.statusCode).json(publicErrorObject.toJSON());
+  res.status(publicErrorObject.statusCode).json(publicErrorObject);
 }
 
 function onNoMatchHandler(req: NextApiRequest, res: NextApiResponse) {
