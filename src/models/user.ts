@@ -1,5 +1,5 @@
 import database from "infra/database";
-import { ValidationError } from "infra/errors";
+import { NotFoundError, ValidationError } from "infra/errors";
 
 export type User = {
   uuid: string;
@@ -13,9 +13,39 @@ export type User = {
 export type NewUser = Pick<User, "username" | "email" | "password">;
 export type PublicUser = Omit<User, "password">;
 
-function getPublicUser(user: User): PublicUser {
-  const { uuid, username, email, created_at, updated_at } = user;
-  return { uuid, username, email, created_at, updated_at };
+export function getPublicUser(user: User): PublicUser {
+  const { password, ...publicFields } = user;
+  return publicFields;
+}
+
+async function getUserByUsername(username: string): Promise<User> {
+  const userFound = await runSelectQuery(username);
+  return userFound;
+
+  async function runSelectQuery(username: string): Promise<User> {
+    const results = await database.query({
+      text: `
+      SELECT
+        *
+      FROM
+        users
+      WHERE
+        LOWER(username) = LOWER($1)
+      LIMIT 
+        1
+      ;`,
+      values: [username],
+    });
+
+    if (results.rowCount != null && results.rowCount === 0) {
+      throw new NotFoundError({
+        message: `'${username}' user not found`,
+        action: "Please check if the username is typed correctly",
+      });
+    }
+    const userFound: User = results.rows[0];
+    return userFound;
+  }
 }
 
 async function create(userInputValues: NewUser): Promise<User> {
@@ -26,7 +56,7 @@ async function create(userInputValues: NewUser): Promise<User> {
   const newUser = await runInsertQuery(username, email, password);
   return newUser;
 
-  async function validateUniqueUsername(username: string) {
+  async function validateUniqueUsername(username: string): Promise<void> {
     const results = await database.query({
       text: `
       SELECT 
@@ -46,7 +76,7 @@ async function create(userInputValues: NewUser): Promise<User> {
     }
   }
 
-  async function validateUniqueEmail(email: string) {
+  async function validateUniqueEmail(email: string): Promise<void> {
     const results = await database.query({
       text: `
       SELECT 
@@ -70,7 +100,7 @@ async function create(userInputValues: NewUser): Promise<User> {
     username: string,
     email: string,
     password: string,
-  ) {
+  ): Promise<User> {
     const newUser = await database.query({
       text: `
       INSERT INTO 
@@ -82,13 +112,14 @@ async function create(userInputValues: NewUser): Promise<User> {
       ;`,
       values: [username, email, password],
     });
-    return newUser.rows[0];
+    return newUser.rows[0] as User;
   }
 }
 
 const user = {
   create,
   getPublicUser,
+  getUserByUsername,
 };
 
 export default user;
