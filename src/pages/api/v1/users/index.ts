@@ -4,23 +4,18 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import user, { PublicUser } from "models/user";
 
-type UsersResponse = PublicUser;
+type UsersResponse = PublicUser | ErrorResponse;
 
-const router = createRouter<
-  NextApiRequest,
-  NextApiResponse<UsersResponse | ErrorResponse>
->();
+const router = createRouter<NextApiRequest, NextApiResponse<UsersResponse>>();
 
-router.get(getHandler).post(postHandler);
+router.post(postHandler);
 
 export default router.handler(controller.errorHandlers);
 
-function getHandler(req: NextApiRequest, res: NextApiResponse) {
-  // const users = users.listUsers();
-  res.status(200).json([]);
-}
-
-async function postHandler(req: NextApiRequest, res: NextApiResponse) {
+async function postHandler(
+  req: NextApiRequest,
+  res: NextApiResponse<UsersResponse>,
+) {
   type Parameters = {
     username: string;
     email: string;
