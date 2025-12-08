@@ -3,11 +3,10 @@ import {
   InternalServerError,
   MethodNotAllowedError,
   BaseHttpError,
-  ValidationError,
 } from "./errors";
 
 function onErrorHandler(err: unknown, _: NextApiRequest, res: NextApiResponse) {
-  if (err instanceof ValidationError) {
+  if (err instanceof BaseHttpError) {
     return res.status(err.statusCode).json(err);
   }
   const publicErrorObject = new InternalServerError({
