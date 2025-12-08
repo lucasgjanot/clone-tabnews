@@ -16,8 +16,8 @@ describe("POST /api/v1/users", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: "lucasgjanot",
-          email: "lgjanot402@gmail.com",
+          username: "user",
+          email: "user@example.com",
           password: "senha1234",
         }),
       });
@@ -25,8 +25,8 @@ describe("POST /api/v1/users", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         uuid: responseBody.uuid,
-        username: "lucasgjanot",
-        email: "lgjanot402@gmail.com",
+        username: "user",
+        email: "user@example.com",
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
