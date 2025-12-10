@@ -72,3 +72,25 @@ export class ServiceError extends BaseHttpError {
     });
   }
 }
+
+export class ValidationError extends BaseHttpError {
+  constructor({ message, action }: { message?: string; action?: string }) {
+    super({
+      name: "ValidationError",
+      message: message || "A validation error occured",
+      action: action || "Adjust sent data and try again",
+      statusCode: 400,
+    });
+  }
+}
+
+export class NotFoundError extends BaseHttpError {
+  constructor({ message, action }: { message?: string; action?: string }) {
+    super({
+      name: "NotFoundError",
+      message: message || "Resource not found",
+      action: action || "Adjust query and try again",
+      statusCode: 404,
+    });
+  }
+}

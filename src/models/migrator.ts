@@ -15,7 +15,7 @@ async function runMigrations(dryRun: boolean = true): Promise<RunMigration[]> {
       dir: resolve("src", "infra", "migrations"),
       direction: "up",
       migrationsTable: "pgmigrations",
-      verbose: true,
+      log: () => {},
     };
     if (dryRun) {
       const pendingMigrations = await migrationRunner(defaultMigrationOptions);
