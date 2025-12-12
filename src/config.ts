@@ -12,7 +12,9 @@ type DatabaseConfig = {
   password: string;
 };
 
-type APIConfig = {};
+type APIConfig = {
+  pepper: string;
+};
 const db: DatabaseConfig = {
   host: envOrThrow("POSTGRES_HOST"),
   port: Number(envOrThrow("POSTGRES_PORT")),
@@ -21,7 +23,9 @@ const db: DatabaseConfig = {
   password: envOrThrow("POSTGRES_PASSWORD"),
 };
 
-const api: APIConfig = {};
+const api: APIConfig = {
+  pepper: envOrThrow("PEPPER"),
+};
 
 const cfg: Config = {
   db,

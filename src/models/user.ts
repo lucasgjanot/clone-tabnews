@@ -1,5 +1,6 @@
 import database from "infra/database";
 import { NotFoundError, ValidationError } from "infra/errors";
+import password_model from "./password";
 
 export type User = {
   uuid: string;
@@ -49,9 +50,10 @@ async function getUserByUsername(username: string): Promise<User> {
 }
 
 async function create(userInputValues: NewUser): Promise<User> {
-  const { username, email, password } = userInputValues;
+  let { username, email, password } = userInputValues;
   await validateUniqueEmail(email);
   await validateUniqueUsername(username);
+  password = await hashedPassword(password);
 
   const newUser = await runInsertQuery(username, email, password);
   return newUser;
@@ -96,6 +98,9 @@ async function create(userInputValues: NewUser): Promise<User> {
     }
   }
 
+  async function hashedPassword(password: string) {
+    return await password_model.hash(password);
+  }
   async function runInsertQuery(
     username: string,
     email: string,

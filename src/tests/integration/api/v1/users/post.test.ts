@@ -1,5 +1,7 @@
 import orchestrator from "tests/orchestrator";
 import { version as uuidVersion } from "uuid";
+import user from "models/user";
+import password from "models/password";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -33,6 +35,12 @@ describe("POST /api/v1/users", () => {
       expect(uuidVersion(responseBody.uuid)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
+      const userInDatabase = await user.getUserByUsername("user");
+      const correctPasswordMatch = await password.compare(
+        "senha1234",
+        userInDatabase.password,
+      );
+      expect(correctPasswordMatch).toBe(true);
     });
     test("With duplicated 'email'", async () => {
       const response1 = await fetch("http://localhost:3000/api/v1/users", {
