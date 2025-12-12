@@ -1,7 +1,7 @@
 import { createRouter } from "next-connect";
 import { NextApiRequest, NextApiResponse } from "next";
 import database from "infra/database";
-import { cfg } from "config";
+import cfg from "config";
 import { ErrorResponse } from "infra/errors";
 import controller from "infra/controller";
 
