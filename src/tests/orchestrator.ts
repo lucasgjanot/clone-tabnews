@@ -1,4 +1,5 @@
 import retry from "async-retry";
+import { faker } from "@faker-js/faker";
 import database from "infra/database";
 import migrator from "models/migrator";
 import user, { NewUser } from "models/user";
@@ -30,11 +31,12 @@ async function runPendingMigrations() {
   await migrator.runPendingMigrations();
 }
 
-async function createUser(inputs: Partial<NewUser>) {
+async function createUser(inputs: Partial<NewUser> = {}) {
   const newUser = await user.create({
-    username: inputs.username || "default",
-    email: inputs.email || "default@example.com",
-    password: inputs.password || "password",
+    username:
+      inputs.username || faker.internet.username().replace(/[_.-]/g, ""),
+    email: inputs.email || faker.internet.email(),
+    password: inputs.password || faker.internet.password(),
   });
   return newUser;
 }
