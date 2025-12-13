@@ -10,46 +10,6 @@ beforeAll(async () => {
 
 describe("PATCH /api/v1/users/[usermame]", () => {
   describe("Anonymous user", () => {
-    test("Without/Empty body", async () => {
-      const user1 = await orchestrator.createUser({
-        username: "testuser",
-        email: "testuser@example.com",
-        password: "password",
-      });
-      const response1 = await fetch(
-        `http://localhost:3000/api/v1/users/${user1.username}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({}),
-        },
-      );
-      const response1Body = await response1.json();
-      expect(response1.status).toBe(400);
-      expect(response1Body).toEqual({
-        name: "ValidationError",
-        message: "Missing required parameters",
-        action: "Adjust sent data and try again",
-        status_code: 400,
-      });
-
-      const response2 = await fetch(
-        "http://localhost:3000/api/v1/users/nonexistent",
-        {
-          method: "PATCH",
-        },
-      );
-      const response2Body = await response2.json();
-      expect(response2.status).toBe(400);
-      expect(response2Body).toEqual({
-        name: "ValidationError",
-        message: "Missing required parameters",
-        action: "Adjust sent data and try again",
-        status_code: 400,
-      });
-    });
     test("With nonexistent 'username'", async () => {
       const response = await fetch(
         "http://localhost:3000/api/v1/users/nonexistent",
@@ -72,16 +32,48 @@ describe("PATCH /api/v1/users/[usermame]", () => {
         status_code: 404,
       });
     });
+    test("Without/Empty body", async () => {
+      const user1 = await orchestrator.createUser();
+      const response1 = await fetch(
+        `http://localhost:3000/api/v1/users/${user1.username}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        },
+      );
+      const response1Body = await response1.json();
+      expect(response1.status).toBe(400);
+      expect(response1Body).toEqual({
+        name: "ValidationError",
+        message: "Missing required parameters",
+        action: "Adjust sent data and try again",
+        status_code: 400,
+      });
+
+      const response2 = await fetch(
+        `http://localhost:3000/api/v1/users/${user1.username}`,
+        {
+          method: "PATCH",
+        },
+      );
+      const response2Body = await response2.json();
+      expect(response2.status).toBe(400);
+      expect(response2Body).toEqual({
+        name: "ValidationError",
+        message: "Missing required parameters",
+        action: "Adjust sent data and try again",
+        status_code: 400,
+      });
+    });
     test("With duplicated 'username'", async () => {
       await orchestrator.createUser({
         username: "user1",
-        email: "user1@exemple.com",
-        password: "senha1234",
       });
       const user2 = await orchestrator.createUser({
         username: "user2",
-        email: "user2@exemple.com",
-        password: "senha1234",
       });
 
       const response = await fetch(
@@ -107,14 +99,10 @@ describe("PATCH /api/v1/users/[usermame]", () => {
     });
     test("With duplicated 'email'", async () => {
       await orchestrator.createUser({
-        username: "email1",
         email: "email1@example.com",
-        password: "senha1234",
       });
       const user2 = await orchestrator.createUser({
-        username: "email2",
         email: "email2@example.com",
-        password: "senha1234",
       });
       const response = await fetch(
         `http://localhost:3000/api/v1/users/${user2.username}`,
@@ -138,13 +126,11 @@ describe("PATCH /api/v1/users/[usermame]", () => {
       });
     });
     test("With unique 'username'", async () => {
-      const user1 = await orchestrator.createUser({
+      await orchestrator.createUser({
         username: "uniqueUser1",
-        email: "uniqueUser1@exemple.com",
-        password: "senha1234",
       });
       const response = await fetch(
-        `http://localhost:3000/api/v1/users/${user1.username}`,
+        "http://localhost:3000/api/v1/users/uniqueUser1",
         {
           method: "PATCH",
           headers: {
@@ -167,9 +153,7 @@ describe("PATCH /api/v1/users/[usermame]", () => {
     });
     test("With unique 'email'", async () => {
       const user1 = await orchestrator.createUser({
-        username: "uniqueEmail1",
         email: "uniqueEmail1@exemple.com",
-        password: "senha1234",
       });
 
       const response = await fetch(
@@ -188,7 +172,7 @@ describe("PATCH /api/v1/users/[usermame]", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         uuid: responseBody.uuid,
-        username: "uniqueEmail1",
+        username: user1.username,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -200,8 +184,6 @@ describe("PATCH /api/v1/users/[usermame]", () => {
     });
     test("With new 'password'", async () => {
       const user1 = await orchestrator.createUser({
-        username: "newPassword1",
-        email: "newPassword1@exemple.com",
         password: "newPassword1",
       });
 
@@ -221,7 +203,7 @@ describe("PATCH /api/v1/users/[usermame]", () => {
       expect(response.status).toBe(200);
       expect(responseBody).toEqual({
         uuid: responseBody.uuid,
-        username: "newPassword1",
+        username: user1.username,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
