@@ -1,6 +1,7 @@
 type Config = {
   db: DatabaseConfig;
   environment: string;
+  api: APIConfig;
 };
 
 type DatabaseConfig = {
@@ -11,6 +12,9 @@ type DatabaseConfig = {
   password: string;
 };
 
+type APIConfig = {
+  pepper: string;
+};
 const db: DatabaseConfig = {
   host: envOrThrow("POSTGRES_HOST"),
   port: Number(envOrThrow("POSTGRES_PORT")),
@@ -19,10 +23,17 @@ const db: DatabaseConfig = {
   password: envOrThrow("POSTGRES_PASSWORD"),
 };
 
-export const cfg: Config = {
+const api: APIConfig = {
+  pepper: envOrThrow("PEPPER"),
+};
+
+const cfg: Config = {
   db,
   environment: process.env.NODE_ENV,
+  api,
 };
+
+export default cfg;
 
 function envOrThrow(key: string) {
   const value = process.env[key];

@@ -1,5 +1,6 @@
 import database from "infra/database";
 import { NotFoundError, ValidationError } from "infra/errors";
+import password from "./password";
 
 export type User = {
   uuid: string;
@@ -11,10 +12,10 @@ export type User = {
 };
 
 export type NewUser = Pick<User, "username" | "email" | "password">;
-export type PublicUser = Omit<User, "password">;
+export type PublicUser = Omit<User, "email" | "password">;
 
 export function getPublicUser(user: User): PublicUser {
-  const { password, ...publicFields } = user;
+  const { email, password, ...publicFields } = user;
   return publicFields;
 }
 
@@ -49,58 +50,16 @@ async function getUserByUsername(username: string): Promise<User> {
 }
 
 async function create(userInputValues: NewUser): Promise<User> {
-  const { username, email, password } = userInputValues;
-  await validateUniqueEmail(email);
-  await validateUniqueUsername(username);
+  await validateUniqueEmail(userInputValues.email);
+  await validateUniqueUsername(userInputValues.username);
 
-  const newUser = await runInsertQuery(username, email, password);
+  const newData = { ...userInputValues };
+  await hashedPasswordInObjecto(newData);
+
+  const newUser = await runInsertQuery(newData);
   return newUser;
 
-  async function validateUniqueUsername(username: string): Promise<void> {
-    const results = await database.query({
-      text: `
-      SELECT 
-        username 
-      FROM
-        users
-      WHERE
-        LOWER(username) = LOWER($1)
-      ;`,
-      values: [username],
-    });
-    if (results.rowCount != null && results.rowCount > 0) {
-      throw new ValidationError({
-        message: "This username is already being used",
-        action: "Use another username to complete sign in",
-      });
-    }
-  }
-
-  async function validateUniqueEmail(email: string): Promise<void> {
-    const results = await database.query({
-      text: `
-      SELECT 
-        email 
-      FROM
-        users
-      WHERE
-        LOWER(email) = LOWER($1)
-      ;`,
-      values: [email],
-    });
-    if (results.rowCount != null && results.rowCount > 0) {
-      throw new ValidationError({
-        message: "This email is already being used",
-        action: "Use another email to complete sign in",
-      });
-    }
-  }
-
-  async function runInsertQuery(
-    username: string,
-    email: string,
-    password: string,
-  ): Promise<User> {
+  async function runInsertQuery(newData: NewUser): Promise<User> {
     const newUser = await database.query({
       text: `
       INSERT INTO 
@@ -110,14 +69,114 @@ async function create(userInputValues: NewUser): Promise<User> {
       RETURNING
         *
       ;`,
-      values: [username, email, password],
+      values: [newData.username, newData.email, newData.password],
     });
     return newUser.rows[0] as User;
   }
 }
 
+async function update(
+  username: string,
+  params: Partial<NewUser>,
+): Promise<User> {
+  const currentUser = await getUserByUsername(username);
+  if (params.username) {
+    if (
+      currentUser.username.toLowerCase() !== params.username.toLocaleLowerCase()
+    ) {
+      await validateUniqueUsername(params.username);
+    }
+  }
+  if (params.email) {
+    await validateUniqueEmail(params.email);
+  }
+
+  const updateData: Partial<NewUser> = {
+    ...params,
+  };
+
+  if (updateData.password) {
+    await hashedPasswordInObjecto(updateData);
+  }
+  const userWithNewValues = { ...currentUser, ...updateData };
+  const updatedUser = await runUpdateQuery(userWithNewValues);
+  return updatedUser;
+
+  async function runUpdateQuery(userWithNewValues: User): Promise<User> {
+    const result = await database.query({
+      text: `
+      UPDATE
+        users
+      SET
+        username = $2,
+        email = $3, 
+        password = $4,
+        updated_at = timezone('utc', now())
+      WHERE
+        uuid=$1
+      RETURNING
+        *
+      ;`,
+      values: [
+        userWithNewValues.uuid,
+        userWithNewValues.username,
+        userWithNewValues.email,
+        userWithNewValues.password,
+      ],
+    });
+    return result.rows[0] as User;
+  }
+}
+
+async function validateUniqueUsername(username: string): Promise<void> {
+  const results = await database.query({
+    text: `
+      SELECT 
+        username 
+      FROM
+        users
+      WHERE
+        LOWER(username) = LOWER($1)
+      ;`,
+    values: [username],
+  });
+  if (results.rowCount != null && results.rowCount > 0) {
+    throw new ValidationError({
+      message: "This username is already being used",
+      action: "Use another username to continue",
+    });
+  }
+}
+
+async function validateUniqueEmail(email: string): Promise<void> {
+  const results = await database.query({
+    text: `
+      SELECT 
+        email 
+      FROM
+        users
+      WHERE
+        LOWER(email) = LOWER($1)
+      ;`,
+    values: [email],
+  });
+  if (results.rowCount != null && results.rowCount > 0) {
+    throw new ValidationError({
+      message: "This email is already being used",
+      action: "Use another email to continue",
+    });
+  }
+}
+
+async function hashedPasswordInObjecto(updateData: Partial<NewUser>) {
+  if (updateData.password) {
+    updateData.password = await password.hash(updateData.password);
+  }
+}
+
 const user = {
   create,
+  update,
   getPublicUser,
   getUserByUsername,
 };

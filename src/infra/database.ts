@@ -1,4 +1,4 @@
-import { cfg } from "config";
+import cfg from "config";
 import { Client } from "pg";
 import { ServiceError } from "./errors";
 

@@ -1,6 +1,7 @@
 import retry from "async-retry";
 import database from "infra/database";
 import migrator from "models/migrator";
+import user, { NewUser } from "models/user";
 
 async function waitForAllServices() {
   await waitForWebServer();
@@ -29,10 +30,20 @@ async function runPendingMigrations() {
   await migrator.runPendingMigrations();
 }
 
+async function createUser(inputs: Partial<NewUser>) {
+  const newUser = await user.create({
+    username: inputs.username || "default",
+    email: inputs.email || "default@example.com",
+    password: inputs.password || "password",
+  });
+  return newUser;
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
   runPendingMigrations,
+  createUser,
 };
 
 export default orchestrator;
