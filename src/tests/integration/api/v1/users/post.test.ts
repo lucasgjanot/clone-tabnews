@@ -28,7 +28,6 @@ describe("POST /api/v1/users", () => {
       expect(responseBody).toEqual({
         uuid: responseBody.uuid,
         username: "user",
-        email: "user@example.com",
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -41,6 +40,7 @@ describe("POST /api/v1/users", () => {
         userInDatabase.password,
       );
       expect(correctPasswordMatch).toBe(true);
+      expect(userInDatabase.email).toBe("user@example.com");
     });
     test("With duplicated 'email'", async () => {
       const response1 = await fetch("http://localhost:3000/api/v1/users", {
@@ -74,7 +74,7 @@ describe("POST /api/v1/users", () => {
       expect(response2Body).toEqual({
         name: "ValidationError",
         message: "This email is already being used",
-        action: "Use another email to complete sign in",
+        action: "Use another email to continue",
         status_code: 400,
       });
     });
@@ -110,7 +110,7 @@ describe("POST /api/v1/users", () => {
       expect(response2Body).toEqual({
         name: "ValidationError",
         message: "This username is already being used",
-        action: "Use another username to complete sign in",
+        action: "Use another username to continue",
         status_code: 400,
       });
     });
