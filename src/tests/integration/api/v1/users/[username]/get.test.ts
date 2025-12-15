@@ -23,12 +23,12 @@ describe("GET /api/v1/users/[usermame]", () => {
       expect(response2.status).toBe(200);
       const response2Body = await response2.json();
       expect(response2Body).toEqual({
-        uuid: response2Body.uuid,
+        id: response2Body.id,
         username: "exactCase",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
       });
-      expect(uuidVersion(response2Body.uuid)).toBe(4);
+      expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();
       expect(Date.parse(response2Body.updated_at)).not.toBeNaN();
       const userInDatabase = await user.getUserByUsername(
@@ -49,12 +49,12 @@ describe("GET /api/v1/users/[usermame]", () => {
       expect(response2.status).toBe(200);
       const response2Body = await response2.json();
       expect(response2Body).toEqual({
-        uuid: response2Body.uuid,
+        id: response2Body.id,
         username: "mismatchcase",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
       });
-      expect(uuidVersion(response2Body.uuid)).toBe(4);
+      expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();
       expect(Date.parse(response2Body.updated_at)).not.toBeNaN();
       const userInDatabase = await user.getUserByUsername(

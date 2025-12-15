@@ -3,7 +3,7 @@ import { NotFoundError, ValidationError } from "infra/errors";
 import password from "./password";
 
 export type User = {
-  uuid: string;
+  id: string;
   username: string;
   email: string;
   password: string;
@@ -26,14 +26,14 @@ async function getUserByUsername(username: string): Promise<User> {
   async function runSelectQuery(username: string): Promise<User> {
     const results = await database.query({
       text: `
-      SELECT
-        *
-      FROM
-        users
-      WHERE
-        LOWER(username) = LOWER($1)
-      LIMIT 
-        1
+        SELECT
+          *
+        FROM
+          users
+        WHERE
+          LOWER(username) = LOWER($1)
+        LIMIT 
+          1
       ;`,
       values: [username],
     });
@@ -41,6 +41,36 @@ async function getUserByUsername(username: string): Promise<User> {
     if (results.rowCount != null && results.rowCount === 0) {
       throw new NotFoundError({
         message: `'${username}' user not found`,
+        action: "Please check if the username is typed correctly",
+      });
+    }
+    const userFound: User = results.rows[0];
+    return userFound;
+  }
+}
+
+async function getUserByEmail(email: string): Promise<User> {
+  const userFound = await runSelectQuery(email);
+  return userFound;
+
+  async function runSelectQuery(email: string): Promise<User> {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          users
+        WHERE
+          LOWER(email) = LOWER($1)
+        LIMIT 
+          1
+      ;`,
+      values: [email],
+    });
+
+    if (results.rowCount != null && results.rowCount === 0) {
+      throw new NotFoundError({
+        message: `'${email}' user not found`,
         action: "Please check if the username is typed correctly",
       });
     }
@@ -60,18 +90,18 @@ async function create(userInputValues: NewUser): Promise<User> {
   return newUser;
 
   async function runInsertQuery(newData: NewUser): Promise<User> {
-    const newUser = await database.query({
+    const results = await database.query({
       text: `
-      INSERT INTO 
-        users (username, email, password) 
-      VALUES 
-        ($1, $2, $3)
-      RETURNING
-        *
+        INSERT INTO 
+          users (username, email, password) 
+        VALUES 
+          ($1, $2, $3)
+        RETURNING
+          *
       ;`,
       values: [newData.username, newData.email, newData.password],
     });
-    return newUser.rows[0] as User;
+    return results.rows[0] as User;
   }
 }
 
@@ -105,20 +135,20 @@ async function update(
   async function runUpdateQuery(userWithNewValues: User): Promise<User> {
     const result = await database.query({
       text: `
-      UPDATE
-        users
-      SET
-        username = $2,
-        email = $3, 
-        password = $4,
-        updated_at = timezone('utc', now())
-      WHERE
-        uuid=$1
-      RETURNING
-        *
+        UPDATE
+          users
+        SET
+          username = $2,
+          email = $3, 
+          password = $4,
+          updated_at = timezone('utc', now())
+        WHERE
+          id=$1
+        RETURNING
+          *
       ;`,
       values: [
-        userWithNewValues.uuid,
+        userWithNewValues.id,
         userWithNewValues.username,
         userWithNewValues.email,
         userWithNewValues.password,
@@ -137,7 +167,7 @@ async function validateUniqueUsername(username: string): Promise<void> {
         users
       WHERE
         LOWER(username) = LOWER($1)
-      ;`,
+    ;`,
     values: [username],
   });
   if (results.rowCount != null && results.rowCount > 0) {
@@ -157,7 +187,7 @@ async function validateUniqueEmail(email: string): Promise<void> {
         users
       WHERE
         LOWER(email) = LOWER($1)
-      ;`,
+    ;`,
     values: [email],
   });
   if (results.rowCount != null && results.rowCount > 0) {
@@ -179,6 +209,7 @@ const user = {
   update,
   getPublicUser,
   getUserByUsername,
+  getUserByEmail,
 };
 
 export default user;

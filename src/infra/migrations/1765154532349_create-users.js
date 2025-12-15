@@ -1,6 +1,6 @@
 exports.up = (pgm) => {
   pgm.createTable("users", {
-    uuid: {
+    id: {
       type: "uuid",
       primaryKey: true,
       default: pgm.func("gen_random_uuid()"),

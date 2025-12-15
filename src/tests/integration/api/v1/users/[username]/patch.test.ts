@@ -144,7 +144,7 @@ describe("PATCH /api/v1/users/[usermame]", () => {
       expect(response.status).toBe(200);
       const responseBody = await response.json();
       expect(responseBody).toEqual({
-        uuid: responseBody.uuid,
+        id: responseBody.id,
         username: "uniqueUser2",
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
@@ -171,7 +171,7 @@ describe("PATCH /api/v1/users/[usermame]", () => {
       expect(response.status).toBe(200);
       const responseBody = await response.json();
       expect(responseBody).toEqual({
-        uuid: responseBody.uuid,
+        id: responseBody.id,
         username: user1.username,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
@@ -202,7 +202,7 @@ describe("PATCH /api/v1/users/[usermame]", () => {
       const responseBody = await response.json();
       expect(response.status).toBe(200);
       expect(responseBody).toEqual({
-        uuid: responseBody.uuid,
+        id: responseBody.id,
         username: user1.username,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
