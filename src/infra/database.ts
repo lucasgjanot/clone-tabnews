@@ -4,7 +4,7 @@ import { ServiceError } from "./errors";
 
 type QueryObject = {
   text: string;
-  values: string[];
+  values: any[];
 };
 
 async function query(queryObject: QueryObject | string) {
