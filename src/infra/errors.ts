@@ -109,6 +109,7 @@ export class UnauthorizedError extends BaseHttpError {
       message: message || "Authentication failed.",
       action: action || "The provided credentials are invalid or expired.",
       statusCode: 401,
+      cause,
     });
   }
 }
