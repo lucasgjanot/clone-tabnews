@@ -62,7 +62,7 @@
     "prettier": "3.3.3",
     "set-cookie-parser": "2.7.1",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.0.0"
   },
   "config": {
     "commitizen": {
