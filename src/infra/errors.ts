@@ -94,3 +94,21 @@ export class NotFoundError extends BaseHttpError {
     });
   }
 }
+export class UnauthorizedError extends BaseHttpError {
+  constructor({
+    message,
+    action,
+    cause,
+  }: {
+    message?: string;
+    action?: string;
+    cause?: Error;
+  }) {
+    super({
+      name: "UnauthorizedError",
+      message: message || "Authentication failed.",
+      action: action || "The provided credentials are invalid or expired.",
+      statusCode: 401,
+    });
+  }
+}
