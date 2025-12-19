@@ -64,9 +64,6 @@ async function renew(sessionToken: string): Promise<Session> {
       ;`,
       values: [sessionToken, newExpiresAt, newUpdatedAt],
     });
-    if (results.rowCount != null && results.rowCount === 0) {
-      throw new UnauthorizedError();
-    }
     return results.rows[0];
   }
 }
@@ -93,7 +90,10 @@ async function getValidSession(
       values: [sessionToken],
     });
     if (results.rowCount != null && results.rowCount === 0) {
-      throw new UnauthorizedError();
+      throw new UnauthorizedError({
+        message: "User does not have an active session.",
+        action: "Verify that this user is logged in and try again.",
+      });
     }
     return results.rows[0];
   }

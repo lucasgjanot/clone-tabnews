@@ -91,8 +91,8 @@ describe("GET /api/v1/user", () => {
 
       expect(responseBody).toEqual({
         name: "UnauthorizedError",
-        message: "Authentication failed.",
-        action: "The provided credentials are invalid or expired.",
+        message: "User does not have an active session.",
+        action: "Verify that this user is logged in and try again.",
         status_code: 401,
       });
     });
@@ -124,8 +124,8 @@ describe("GET /api/v1/user", () => {
 
       expect(responseBody).toEqual({
         name: "UnauthorizedError",
-        message: "Authentication failed.",
-        action: "The provided credentials are invalid or expired.",
+        message: "User does not have an active session.",
+        action: "Verify that this user is logged in and try again.",
         status_code: 401,
       });
     });
