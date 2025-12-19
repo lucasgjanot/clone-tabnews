@@ -9,7 +9,7 @@ type SessionResponse = {} | ErrorResponse;
 
 const router = createRouter<NextApiRequest, NextApiResponse<SessionResponse>>();
 
-router.post(postHandler);
+router.post(postHandler).delete(deleteHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -36,4 +36,14 @@ async function postHandler(
   controller.setSessionCookie(newSession.token, res);
 
   res.status(201).json(newSession);
+}
+
+async function deleteHandler(req: NextApiRequest, res: NextApiResponse) {
+  const sessionToken = req.cookies.session_id;
+
+  const validSession = await session.getValidSession(sessionToken);
+  const expiredSession = await session.expireById(validSession.id);
+  controller.clearSessionCookie(res);
+
+  res.status(200).json(expiredSession);
 }

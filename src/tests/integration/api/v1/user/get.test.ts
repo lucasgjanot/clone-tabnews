@@ -95,6 +95,20 @@ describe("GET /api/v1/user", () => {
         action: "Verify that this user is logged in and try again.",
         status_code: 401,
       });
+
+      const cookieHeader = response.headers.get("set-cookie");
+      expect(cookieHeader).toBeTruthy();
+      const parsedSetCookie = setCookieParser(cookieHeader as string, {
+        map: true,
+      });
+
+      expect(parsedSetCookie.session_id).toEqual({
+        name: "session_id",
+        value: "invalid",
+        maxAge: -1,
+        path: "/",
+        httpOnly: true,
+      });
     });
     test("With expired session", async () => {
       const user1 = await orchestrator.createUser({
@@ -127,6 +141,20 @@ describe("GET /api/v1/user", () => {
         message: "User does not have an active session.",
         action: "Verify that this user is logged in and try again.",
         status_code: 401,
+      });
+
+      const cookieHeader = response.headers.get("set-cookie");
+      expect(cookieHeader).toBeTruthy();
+      const parsedSetCookie = setCookieParser(cookieHeader as string, {
+        map: true,
+      });
+
+      expect(parsedSetCookie.session_id).toEqual({
+        name: "session_id",
+        value: "invalid",
+        maxAge: -1,
+        path: "/",
+        httpOnly: true,
       });
     });
     test("With halfway-expired session", async () => {

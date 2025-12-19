@@ -13,6 +13,31 @@ export type Session = {
 
 const EXPIRATION_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000; // 30 Days
 
+async function expireById(sessionId: string | undefined): Promise<Session> {
+  const revokedToken = await runUpdateQuery(sessionId);
+  return revokedToken;
+
+  async function runUpdateQuery(
+    sessionId: string | undefined,
+  ): Promise<Session> {
+    const newExpiresAt = new Date();
+    const results = await database.query({
+      text: `
+        UPDATE
+          sessions
+        SET
+          expires_at = $2, updated_at = $2
+        WHERE
+          id = $1
+        RETURNING
+          *
+      ;`,
+      values: [sessionId, newExpiresAt],
+    });
+    return results.rows[0] as Session;
+  }
+}
+
 async function create(userId: string): Promise<Session> {
   const token = crypto.randomBytes(48).toString("hex");
   const createAt = new Date();
@@ -45,7 +70,7 @@ async function renew(sessionToken: string): Promise<Session> {
   const renewedSession = runUpdateQuery(sessionToken);
   return renewedSession;
 
-  async function runUpdateQuery(sessionToken: string) {
+  async function runUpdateQuery(sessionToken: string): Promise<Session> {
     const newUpdatedAt = new Date();
     const newExpiresAt = new Date(
       newUpdatedAt.getTime() + EXPIRATION_IN_MILLISECONDS,
@@ -102,6 +127,7 @@ async function getValidSession(
 const session = {
   create,
   renew,
+  expireById,
   getValidSession,
   EXPIRATION_IN_MILLISECONDS,
 };
