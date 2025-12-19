@@ -1,3 +1,7 @@
+import * as cookie from "cookie";
+import cfg from "config";
+import session from "models/session";
+
 import { NextApiRequest, NextApiResponse } from "next";
 import {
   InternalServerError,
@@ -25,12 +29,23 @@ function onNoMatchHandler(req: NextApiRequest, res: NextApiResponse) {
     .status(methodNotAllowedError.statusCode)
     .json(methodNotAllowedError.toJSON());
 }
+function setSessionCookie(sessionToken: string, response: NextApiResponse) {
+  const SetCookie = cookie.serialize("session_id", sessionToken, {
+    path: "/",
+    maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
+    secure: cfg.environment === "production",
+    httpOnly: true,
+  });
+
+  response.setHeader("Set-Cookie", SetCookie);
+}
 
 const controller = {
   errorHandlers: {
     onNoMatch: onNoMatchHandler,
     onError: onErrorHandler,
   },
+  setSessionCookie,
 };
 
 export default controller;

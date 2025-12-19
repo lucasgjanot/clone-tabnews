@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import database from "infra/database";
+import { UnauthorizedError } from "infra/errors";
 
-type Session = {
+export type Session = {
   id: string;
   token: string;
   user_id: string;
@@ -10,12 +11,12 @@ type Session = {
   updated_at: Date;
 };
 
-const EXPIRATION_IN_MILISECONDS = 30 * 24 * 60 * 60 * 1000; // 30 Days
+const EXPIRATION_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000; // 30 Days
 
 async function create(userId: string): Promise<Session> {
   const token = crypto.randomBytes(48).toString("hex");
   const createAt = new Date();
-  const expiresAt = new Date(createAt.getTime() + EXPIRATION_IN_MILISECONDS);
+  const expiresAt = new Date(createAt.getTime() + EXPIRATION_IN_MILLISECONDS);
   const newSession = await runInsertQuery(token, userId, expiresAt, createAt);
   return newSession;
 
@@ -28,9 +29,9 @@ async function create(userId: string): Promise<Session> {
     const results = await database.query({
       text: `
         INSERT INTO
-          sessions (token, user_id, expires_at, created_at)
+          sessions (token, user_id, expires_at, created_at, updated_at)
         VALUES
-          ($1, $2, $3, $4)
+          ($1, $2, $3, $4, $4)
         RETURNING
           *
       ;`,
@@ -40,9 +41,69 @@ async function create(userId: string): Promise<Session> {
   }
 }
 
+async function renew(sessionToken: string): Promise<Session> {
+  const renewedSession = runUpdateQuery(sessionToken);
+  return renewedSession;
+
+  async function runUpdateQuery(sessionToken: string) {
+    const newUpdatedAt = new Date();
+    const newExpiresAt = new Date(
+      newUpdatedAt.getTime() + EXPIRATION_IN_MILLISECONDS,
+    );
+    const results = await database.query({
+      text: `
+        UPDATE
+          sessions
+        SET 
+          expires_at = $2,
+          updated_at = $3
+        WHERE
+          token = $1
+        RETURNING
+          *
+      ;`,
+      values: [sessionToken, newExpiresAt, newUpdatedAt],
+    });
+    if (results.rowCount != null && results.rowCount === 0) {
+      throw new UnauthorizedError();
+    }
+    return results.rows[0];
+  }
+}
+async function getValidSession(
+  sessionToken: string | undefined,
+): Promise<Session> {
+  const validSession = await runSelectQuery(sessionToken);
+  return validSession;
+
+  async function runSelectQuery(
+    sessionToken: string | undefined,
+  ): Promise<Session> {
+    const results = await database.query({
+      text: `
+        SELECT 
+          *
+        FROM
+          sessions
+        WHERE
+          token = $1 
+          AND 
+          expires_at > timezone('utc', now())
+      ;`,
+      values: [sessionToken],
+    });
+    if (results.rowCount != null && results.rowCount === 0) {
+      throw new UnauthorizedError();
+    }
+    return results.rows[0];
+  }
+}
+
 const session = {
   create,
-  EXPIRATION_IN_MILISECONDS,
+  renew,
+  getValidSession,
+  EXPIRATION_IN_MILLISECONDS,
 };
 
 export default session;
