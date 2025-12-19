@@ -104,7 +104,7 @@ describe("POST /api/v1/sessions", () => {
       const createAt = new Date(responseBody.created_at);
       const expiresAt = new Date(responseBody.expires_at);
       expect(expiresAt.getTime() - createAt.getTime()).toBe(
-        session.EXPIRATION_IN_MILISECONDS,
+        session.EXPIRATION_IN_MILLISECONDS,
       );
       const cookieHeader = response.headers.get("set-cookie");
       expect(cookieHeader).toBeTruthy();
@@ -114,11 +114,10 @@ describe("POST /api/v1/sessions", () => {
       expect(parsedSetCookie.session_id).toEqual({
         name: "session_id",
         value: responseBody.token,
-        maxAge: session.EXPIRATION_IN_MILISECONDS / 1000,
+        maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
         path: "/",
         httpOnly: true,
       });
-      console.log(parsedSetCookie);
     });
   });
 });

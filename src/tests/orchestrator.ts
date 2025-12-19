@@ -3,6 +3,7 @@ import { faker } from "@faker-js/faker";
 import database from "infra/database";
 import migrator from "models/migrator";
 import user, { NewUser } from "models/user";
+import session, { Session } from "models/session";
 
 async function waitForAllServices() {
   await waitForWebServer();
@@ -41,11 +42,17 @@ async function createUser(inputs: Partial<NewUser> = {}) {
   return newUser;
 }
 
+async function createSession(user_id: string): Promise<Session> {
+  const sessionObject = await session.create(user_id);
+  return sessionObject;
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
   runPendingMigrations,
   createUser,
+  createSession,
 };
 
 export default orchestrator;

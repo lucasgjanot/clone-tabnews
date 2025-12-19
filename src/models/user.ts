@@ -19,6 +19,32 @@ export function getPublicUser(user: User): PublicUser {
   return publicFields;
 }
 
+async function getUserByUserId(user_id: string): Promise<User> {
+  const userFound = await runSelectQuery(user_id);
+  return userFound;
+
+  async function runSelectQuery(user_id: string): Promise<User> {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          users
+        WHERE
+          id = $1
+      ;`,
+      values: [user_id],
+    });
+    if (results.rowCount != null && results.rowCount === 0) {
+      throw new NotFoundError({
+        message: `'${user_id}' user not found`,
+        action: "Please check if the user_id is typed correctly",
+      });
+    }
+    return results.rows[0];
+  }
+}
+
 async function getUserByUsername(username: string): Promise<User> {
   const userFound = await runSelectQuery(username);
   return userFound;
@@ -210,6 +236,7 @@ const user = {
   getPublicUser,
   getUserByUsername,
   getUserByEmail,
+  getUserByUserId,
 };
 
 export default user;

@@ -103,7 +103,7 @@ export class UnauthorizedError extends BaseHttpError {
     message?: string;
     action?: string;
     cause?: Error;
-  }) {
+  } = {}) {
     super({
       name: "UnauthorizedError",
       message: message || "Authentication failed.",
