@@ -2,6 +2,7 @@ type Config = {
   db: DatabaseConfig;
   environment: string;
   api: APIConfig;
+  mailer: MailerConfig;
 };
 
 type DatabaseConfig = {
@@ -15,6 +16,21 @@ type DatabaseConfig = {
 type APIConfig = {
   pepper: string;
 };
+
+type MailerConfig = {
+  host: string;
+  port: number;
+  user: string;
+  password: string;
+};
+
+const mailer: MailerConfig = {
+  host: envOrThrow("EMAIL_SMTP_HOST"),
+  port: Number(envOrThrow("EMAIL_SMTP_PORT")),
+  user: envOrThrow("EMAIL_SMTP_USER"),
+  password: envOrThrow("EMAIL_SMTP_PASSWORD"),
+};
+
 const db: DatabaseConfig = {
   host: envOrThrow("POSTGRES_HOST"),
   port: Number(envOrThrow("POSTGRES_PORT")),
@@ -31,6 +47,7 @@ const cfg: Config = {
   db,
   environment: process.env.NODE_ENV,
   api,
+  mailer,
 };
 
 export default cfg;
