@@ -91,9 +91,23 @@ describe("GET /api/v1/user", () => {
 
       expect(responseBody).toEqual({
         name: "UnauthorizedError",
-        message: "Authentication failed.",
-        action: "The provided credentials are invalid or expired.",
+        message: "User does not have an active session.",
+        action: "Verify that this user is logged in and try again.",
         status_code: 401,
+      });
+
+      const cookieHeader = response.headers.get("set-cookie");
+      expect(cookieHeader).toBeTruthy();
+      const parsedSetCookie = setCookieParser(cookieHeader as string, {
+        map: true,
+      });
+
+      expect(parsedSetCookie.session_id).toEqual({
+        name: "session_id",
+        value: "invalid",
+        maxAge: -1,
+        path: "/",
+        httpOnly: true,
       });
     });
     test("With expired session", async () => {
@@ -124,9 +138,23 @@ describe("GET /api/v1/user", () => {
 
       expect(responseBody).toEqual({
         name: "UnauthorizedError",
-        message: "Authentication failed.",
-        action: "The provided credentials are invalid or expired.",
+        message: "User does not have an active session.",
+        action: "Verify that this user is logged in and try again.",
         status_code: 401,
+      });
+
+      const cookieHeader = response.headers.get("set-cookie");
+      expect(cookieHeader).toBeTruthy();
+      const parsedSetCookie = setCookieParser(cookieHeader as string, {
+        map: true,
+      });
+
+      expect(parsedSetCookie.session_id).toEqual({
+        name: "session_id",
+        value: "invalid",
+        maxAge: -1,
+        path: "/",
+        httpOnly: true,
       });
     });
     test("With halfway-expired session", async () => {
