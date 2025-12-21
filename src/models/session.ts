@@ -67,7 +67,7 @@ async function create(userId: string): Promise<Session> {
 }
 
 async function renew(sessionToken: string): Promise<Session> {
-  const renewedSession = runUpdateQuery(sessionToken);
+  const renewedSession = await runUpdateQuery(sessionToken);
   return renewedSession;
 
   async function runUpdateQuery(sessionToken: string): Promise<Session> {
