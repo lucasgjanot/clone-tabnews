@@ -12,10 +12,10 @@ export type User = {
   updated_at: Date;
 };
 
-export type NewUser = Pick<
-  User,
-  "username" | "email" | "password" | "features"
->;
+export type NewUser = Pick<User, "username" | "email" | "password"> & {
+  features?: User["features"];
+};
+
 export type PublicUser = Omit<User, "email" | "password" | "features">;
 
 export function getPublicUser(user: User): PublicUser {

@@ -3,6 +3,7 @@ import { ErrorResponse, ValidationError } from "infra/errors";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import user, { PublicUser } from "models/user";
+import activation from "models/activation";
 
 type UsersResponse = PublicUser | ErrorResponse;
 
@@ -33,6 +34,9 @@ async function postHandler(
   }
 
   const newUser = await user.create(userInputValues);
+
+  const newToken = await activation.create(newUser.id);
+  await activation.sendEmailToUser(newUser, newToken);
 
   res.status(201).json(user.getPublicUser(newUser));
 }

@@ -1,6 +1,7 @@
 import { PublicUser } from "models/user";
 import orchestrator from "tests/orchestrator";
 import user from "models/user";
+import activation from "models/activation";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -10,6 +11,7 @@ beforeAll(async () => {
 });
 
 describe("Use case: Registration Flow (all successful)", () => {
+  let createUserResponseBody: PublicUser;
   test("Create user account", async () => {
     const createUserResponse = await fetch(
       "http://localhost:3000/api/v1/users",
@@ -34,7 +36,7 @@ describe("Use case: Registration Flow (all successful)", () => {
 
     expect(createdUser.features).toEqual(["read:activation_token"]);
 
-    const createUserResponseBody: PublicUser = await createUserResponse.json();
+    createUserResponseBody = await createUserResponse.json();
 
     expect(createUserResponseBody).toEqual({
       id: createUserResponseBody.id,
@@ -43,7 +45,19 @@ describe("Use case: Registration Flow (all successful)", () => {
       updated_at: createUserResponseBody.updated_at,
     });
   });
-  test("Receive activation email", async () => {});
+  test("Receive activation email", async () => {
+    const lastEmail = await orchestrator.getLastEmail();
+    const activationToken = await activation.getAtivationTokenByUserId(
+      createUserResponseBody.id,
+    );
+    expect(lastEmail.sender).toBe("<contact@clone-tabnews.com.br>");
+    expect(lastEmail.recipients[0]).toBe(
+      "<registration.flow@clone-tabnews.com.br>",
+    );
+    expect(lastEmail.subject).toBe("Activate your account in Clone-TabNews!");
+    expect(lastEmail.text).toContain("RegistrationFlow");
+    expect(lastEmail.text).toContain(activationToken.id);
+  });
   test("Activate account", async () => {});
   test("Login", async () => {});
   test("Get user information", async () => {});
