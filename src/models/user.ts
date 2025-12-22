@@ -7,15 +7,19 @@ export type User = {
   username: string;
   email: string;
   password: string;
+  features: string[];
   created_at: Date;
   updated_at: Date;
 };
 
-export type NewUser = Pick<User, "username" | "email" | "password">;
-export type PublicUser = Omit<User, "email" | "password">;
+export type NewUser = Pick<
+  User,
+  "username" | "email" | "password" | "features"
+>;
+export type PublicUser = Omit<User, "email" | "password" | "features">;
 
 export function getPublicUser(user: User): PublicUser {
-  const { email, password, ...publicFields } = user;
+  const { email, password, features, ...publicFields } = user;
   return publicFields;
 }
 
@@ -110,7 +114,9 @@ async function create(userInputValues: NewUser): Promise<User> {
   await validateUniqueUsername(userInputValues.username);
 
   const newData = { ...userInputValues };
-  await hashedPasswordInObjecto(newData);
+
+  await hashedPasswordInObject(newData);
+  injectDefaultFeaturesInObject(newData);
 
   const newUser = await runInsertQuery(newData);
   return newUser;
@@ -119,15 +125,24 @@ async function create(userInputValues: NewUser): Promise<User> {
     const results = await database.query({
       text: `
         INSERT INTO 
-          users (username, email, password) 
+          users (username, email, password, features) 
         VALUES 
-          ($1, $2, $3)
+          ($1, $2, $3, $4)
         RETURNING
           *
       ;`,
-      values: [newData.username, newData.email, newData.password],
+      values: [
+        newData.username,
+        newData.email,
+        newData.password,
+        newData.features,
+      ],
     });
     return results.rows[0] as User;
+  }
+
+  function injectDefaultFeaturesInObject(userInputValues: NewUser) {
+    userInputValues.features = ["read:activation_token"];
   }
 }
 
@@ -152,7 +167,7 @@ async function update(
   };
 
   if (updateData.password) {
-    await hashedPasswordInObjecto(updateData);
+    await hashedPasswordInObject(updateData);
   }
   const userWithNewValues = { ...currentUser, ...updateData };
   const updatedUser = await runUpdateQuery(userWithNewValues);
@@ -224,7 +239,7 @@ async function validateUniqueEmail(email: string): Promise<void> {
   }
 }
 
-async function hashedPasswordInObjecto(updateData: Partial<NewUser>) {
+async function hashedPasswordInObject(updateData: Partial<NewUser>) {
   if (updateData.password) {
     updateData.password = await password.hash(updateData.password);
   }
