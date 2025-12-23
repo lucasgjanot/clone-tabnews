@@ -2,6 +2,7 @@ import email from "infra/email";
 import { User } from "./user";
 import database from "infra/database";
 import webserver from "./webserver";
+import { NotFoundError } from "infra/errors";
 
 type ActivationToken = {
   id: string;
@@ -14,13 +15,13 @@ type ActivationToken = {
 
 const EXPIRATION_IN_MILLISECONDS = 60 * 15 * 1000; // 15 minutes
 
-async function getAtivationTokenByUserId(
-  userId: string,
+async function getValidAtivationToken(
+  tokenId: string,
 ): Promise<ActivationToken> {
-  const activationToken = await runSelectQuery(userId);
+  const activationToken = await runSelectQuery(tokenId);
   return activationToken;
 
-  async function runSelectQuery(userId: string): Promise<ActivationToken> {
+  async function runSelectQuery(tokenId: string): Promise<ActivationToken> {
     const results = await database.query({
       text: `
         SELECT 
@@ -28,9 +29,17 @@ async function getAtivationTokenByUserId(
         FROM
           user_activation_tokens
         WHERE
-          user_id = $1`,
-      values: [userId],
+          id = $1 and used_at IS NULL and expires_at > timezone('utc', now())
+      ;`,
+      values: [tokenId],
     });
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message:
+          "The activation token has already been used, was not found in the system, or has expired.",
+        action: "Please register again.",
+      });
+    }
     return results.rows[0];
   }
 }
@@ -80,7 +89,7 @@ Clone-TabNews Team`,
 const activation = {
   sendEmailToUser,
   create,
-  getAtivationTokenByUserId,
+  getValidAtivationToken,
 };
 
 export default activation;

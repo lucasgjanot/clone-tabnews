@@ -2,6 +2,7 @@ import { PublicUser } from "models/user";
 import orchestrator from "tests/orchestrator";
 import user from "models/user";
 import activation from "models/activation";
+import webserver from "models/webserver";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -47,8 +48,20 @@ describe("Use case: Registration Flow (all successful)", () => {
   });
   test("Receive activation email", async () => {
     const lastEmail = await orchestrator.getLastEmail();
-    const activationToken = await activation.getAtivationTokenByUserId(
-      createUserResponseBody.id,
+
+    const activationTokenId = orchestrator.extractUUID(lastEmail.text);
+
+    if (!activationTokenId) throw new Error("UUID not found in email");
+
+    const activationToken =
+      await activation.getValidAtivationToken(activationTokenId);
+
+    expect(activationToken.user_id).toBe(createUserResponseBody.id);
+    expect(activationToken.used_at).toBe(null);
+    expect(activationToken.expires_at > new Date()).toBe(true);
+
+    expect(lastEmail.text).toContain(
+      `${webserver.origin}/registration/activate/${activationTokenId}`,
     );
     expect(lastEmail.sender).toBe("<contact@clone-tabnews.com.br>");
     expect(lastEmail.recipients[0]).toBe(
