@@ -37,6 +37,32 @@ export function toPublicResponse(user: User): PublicUserResponse {
   return publicFields;
 }
 
+async function setFeatures(userId: string, features: string[]): Promise<User> {
+  const updatedUser = await runUpdateQuery(userId, features);
+  return updatedUser;
+
+  async function runUpdateQuery(
+    userId: string,
+    features: string[],
+  ): Promise<User> {
+    const results = await database.query({
+      text: `
+        UPDATE
+          users
+        SET
+          features = $2,
+          updated_at = timezone('utc', now())
+        WHERE
+          id = $1
+        RETURNING
+          *
+      ;`,
+      values: [userId, features],
+    });
+    return results.rows[0];
+  }
+}
+
 async function getUserByUserId(user_id: string): Promise<User> {
   const userFound = await runSelectQuery(user_id);
   return userFound;
@@ -173,7 +199,9 @@ async function update(
     }
   }
   if (params.email) {
-    await validateUniqueEmail(params.email);
+    if (currentUser.email.toLocaleLowerCase() !== params.email.toLowerCase()) {
+      await validateUniqueEmail(params.email);
+    }
   }
 
   const updateData: Partial<NewUser> = {
@@ -267,6 +295,7 @@ const user = {
   getUserByUsername,
   getUserByEmail,
   getUserByUserId,
+  setFeatures,
 };
 
 export default user;

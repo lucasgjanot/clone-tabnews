@@ -1,5 +1,5 @@
 import email from "infra/email";
-import { User } from "./user";
+import user, { User } from "./user";
 import database from "infra/database";
 import webserver from "./webserver";
 import { NotFoundError } from "infra/errors";
@@ -17,6 +17,37 @@ export type ActivationToken = ActivationTokenShape<Date>;
 export type ActivationTokenResponse = ActivationTokenShape<string>;
 
 const EXPIRATION_IN_MILLISECONDS = 60 * 15 * 1000; // 15 minutes
+
+async function activateUserByUserId(userId: string): Promise<User> {
+  const activatedUser = await user.setFeatures(userId, ["create:session"]);
+  return activatedUser;
+}
+
+async function markTokenAsUsed(
+  ActivationTokenId: string,
+): Promise<ActivationToken> {
+  const usedActivationToken = await runUpdateQuery(ActivationTokenId);
+  return usedActivationToken;
+
+  async function runUpdateQuery(tokenId: string): Promise<ActivationToken> {
+    const now = new Date();
+    const results = await database.query({
+      text: `
+        UPDATE
+          user_activation_tokens
+        SET
+          used_at = $2,
+          updated_at = $2
+        WHERE
+          id = $1
+        RETURNING
+          *
+      ;`,
+      values: [tokenId, now],
+    });
+    return results.rows[0];
+  }
+}
 
 function toResponse(token: ActivationToken): ActivationTokenResponse {
   return {
@@ -104,7 +135,9 @@ const activation = {
   sendEmailToUser,
   create,
   getValidAtivationToken,
+  markTokenAsUsed,
   toResponse,
+  activateUserByUserId,
 };
 
 export default activation;

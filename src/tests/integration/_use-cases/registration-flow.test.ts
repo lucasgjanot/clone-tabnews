@@ -1,4 +1,4 @@
-import { PublicUser } from "models/user";
+import { PublicUserResponse } from "models/user";
 import orchestrator from "tests/orchestrator";
 import user from "models/user";
 import activation from "models/activation";
@@ -12,7 +12,8 @@ beforeAll(async () => {
 });
 
 describe("Use case: Registration Flow (all successful)", () => {
-  let createUserResponseBody: PublicUser;
+  let createUserResponseBody: PublicUserResponse;
+  let activationTokenId: string | null;
   test("Create user account", async () => {
     const createUserResponse = await fetch(
       "http://localhost:3000/api/v1/users",
@@ -24,7 +25,7 @@ describe("Use case: Registration Flow (all successful)", () => {
         body: JSON.stringify({
           username: "RegistrationFlow",
           email: "registration.flow@clone-tabnews.com.br",
-          password: "senhasegura",
+          password: "securepassword",
         }),
       },
     );
@@ -49,7 +50,9 @@ describe("Use case: Registration Flow (all successful)", () => {
   test("Receive activation email", async () => {
     const lastEmail = await orchestrator.getLastEmail();
 
-    const activationTokenId = orchestrator.extractUUID(lastEmail.text);
+    if (!lastEmail) throw new Error("Email not found");
+
+    activationTokenId = orchestrator.extractUUID(lastEmail.text);
 
     if (!activationTokenId) throw new Error("UUID not found in email");
 
@@ -71,7 +74,34 @@ describe("Use case: Registration Flow (all successful)", () => {
     expect(lastEmail.text).toContain("RegistrationFlow");
     expect(lastEmail.text).toContain(activationToken.id);
   });
-  test("Activate account", async () => {});
+  test("Activate account", async () => {
+    const response = await fetch(
+      `http://localhost:3000/api/v1/activations/${activationTokenId}`,
+      {
+        method: "PATCH",
+      },
+    );
+    const responseBody = await response.json();
+    expect(response.status).toBe(200);
+
+    expect(responseBody).toEqual({
+      id: activationTokenId,
+      used_at: responseBody.used_at,
+      user_id: createUserResponseBody.id,
+      expires_at: responseBody.expires_at,
+      created_at: responseBody.created_at,
+      updated_at: responseBody.updated_at,
+    });
+    expect(Date.parse(responseBody.used_at)).not.toBeNaN();
+    expect(
+      Date.parse(responseBody.updated_at) == Date.parse(responseBody.used_at),
+    ).toBe(true);
+    const activatedUser = await user.getUserByUsername(
+      createUserResponseBody.username,
+    );
+    expect(activatedUser.features).toEqual(["create:session"]);
+    expect(activatedUser.updated_at > activatedUser.created_at).toBe(true);
+  });
   test("Login", async () => {});
   test("Get user information", async () => {});
 });

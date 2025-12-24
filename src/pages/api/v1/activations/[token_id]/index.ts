@@ -1,0 +1,37 @@
+import controller from "infra/controller";
+import { ValidationError } from "infra/errors";
+import activation, { ActivationTokenResponse } from "models/activation";
+import { NextApiRequest, NextApiResponse } from "next";
+import { createRouter } from "next-connect";
+
+type ActivationsResponse = ActivationTokenResponse;
+
+const router = createRouter<
+  NextApiRequest,
+  NextApiResponse<ActivationsResponse>
+>();
+
+export default router.handler(controller.errorHandlers);
+
+router.patch(patchHandler);
+
+async function patchHandler(
+  req: NextApiRequest,
+  res: NextApiResponse<ActivationsResponse>,
+) {
+  const activationTokenId = req.query.token_id;
+  if (typeof activationTokenId !== "string") {
+    throw new ValidationError({
+      message: "Invalid activation token parameter",
+    });
+  }
+
+  const validActivationToken =
+    await activation.getValidAtivationToken(activationTokenId);
+  const usedActivationToken =
+    await activation.markTokenAsUsed(activationTokenId);
+
+  await activation.activateUserByUserId(validActivationToken.user_id);
+
+  return res.status(200).json(activation.toResponse(usedActivationToken));
+}
