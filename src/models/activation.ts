@@ -4,16 +4,30 @@ import database from "infra/database";
 import webserver from "./webserver";
 import { NotFoundError } from "infra/errors";
 
-type ActivationToken = {
+export type ActivationTokenShape<TDate> = {
   id: string;
-  used_at: Date | undefined;
+  used_at?: TDate;
   user_id: string;
-  expires_at: Date;
-  created_at: Date;
-  updated_at: Date;
+  expires_at: TDate;
+  created_at: TDate;
+  updated_at: TDate;
 };
 
+export type ActivationToken = ActivationTokenShape<Date>;
+export type ActivationTokenResponse = ActivationTokenShape<string>;
+
 const EXPIRATION_IN_MILLISECONDS = 60 * 15 * 1000; // 15 minutes
+
+function toResponse(token: ActivationToken): ActivationTokenResponse {
+  return {
+    id: token.id,
+    user_id: token.user_id,
+    used_at: token.used_at?.toISOString(),
+    expires_at: token.expires_at.toISOString(),
+    created_at: token.created_at.toISOString(),
+    updated_at: token.updated_at.toISOString(),
+  };
+}
 
 async function getValidAtivationToken(
   tokenId: string,
@@ -90,6 +104,7 @@ const activation = {
   sendEmailToUser,
   create,
   getValidAtivationToken,
+  toResponse,
 };
 
 export default activation;

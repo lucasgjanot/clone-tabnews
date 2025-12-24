@@ -2,24 +2,38 @@ import database from "infra/database";
 import { NotFoundError, ValidationError } from "infra/errors";
 import password from "./password";
 
-export type User = {
+export type UserShape<TDate> = {
   id: string;
   username: string;
   email: string;
   password: string;
   features: string[];
-  created_at: Date;
-  updated_at: Date;
+  created_at: TDate;
+  updated_at: TDate;
 };
+
+export type User = UserShape<Date>;
+export type UserResponse = UserShape<string>;
+export type PublicUserResponse = Omit<
+  UserResponse,
+  "email" | "password" | "features"
+>;
 
 export type NewUser = Pick<User, "username" | "email" | "password"> & {
   features?: User["features"];
 };
 
-export type PublicUser = Omit<User, "email" | "password" | "features">;
+function toResponse(user: User): UserResponse {
+  return {
+    ...user,
+    created_at: user.created_at.toISOString(),
+    updated_at: user.updated_at.toISOString(),
+  };
+}
 
-export function getPublicUser(user: User): PublicUser {
-  const { email, password, features, ...publicFields } = user;
+export function toPublicResponse(user: User): PublicUserResponse {
+  const response = toResponse(user);
+  const { email, password, features, ...publicFields } = response;
   return publicFields;
 }
 
@@ -248,7 +262,8 @@ async function hashedPasswordInObject(updateData: Partial<NewUser>) {
 const user = {
   create,
   update,
-  getPublicUser,
+  toPublicResponse,
+  toResponse,
   getUserByUsername,
   getUserByEmail,
   getUserByUserId,

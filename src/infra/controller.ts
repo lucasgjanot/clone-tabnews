@@ -14,21 +14,23 @@ import {
 function onErrorHandler(err: unknown, _: NextApiRequest, res: NextApiResponse) {
   if (err instanceof UnauthorizedError) {
     clearSessionCookie(res);
-    return res.status(err.statusCode).json(err);
+    return res.status(err.statusCode).json(err.toJSON());
   }
   if (err instanceof BaseHttpError && !(err instanceof ServiceError)) {
-    return res.status(err.statusCode).json(err);
+    return res.status(err.statusCode).json(err.toJSON());
   }
   const publicErrorObject = new InternalServerError({
     cause: err as Error,
   });
   console.error(publicErrorObject);
-  res.status(publicErrorObject.statusCode).json(publicErrorObject);
+  return res
+    .status(publicErrorObject.statusCode)
+    .json(publicErrorObject.toJSON());
 }
 
 function onNoMatchHandler(req: NextApiRequest, res: NextApiResponse) {
   const methodNotAllowedError = new MethodNotAllowedError({
-    method: req.method as string,
+    method: req.method ?? "UNKNOWN",
   });
   res
     .status(methodNotAllowedError.statusCode)

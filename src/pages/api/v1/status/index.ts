@@ -2,7 +2,6 @@ import { createRouter } from "next-connect";
 import { NextApiRequest, NextApiResponse } from "next";
 import database from "infra/database";
 import cfg from "config";
-import { ErrorResponse } from "infra/errors";
 import controller from "infra/controller";
 
 export type StatusResponse = {
@@ -16,7 +15,7 @@ export type StatusResponse = {
   };
 };
 
-const router = createRouter<NextApiRequest, NextApiResponse>();
+const router = createRouter<NextApiRequest, NextApiResponse<StatusResponse>>();
 
 router.get(getHandler);
 
@@ -24,7 +23,7 @@ export default router.handler(controller.errorHandlers);
 
 async function getHandler(
   _: NextApiRequest,
-  res: NextApiResponse<StatusResponse | ErrorResponse>,
+  res: NextApiResponse<StatusResponse>,
 ) {
   const databaseVersionResult = await database.query("SHOW server_version;");
   const databaseVersionValue = databaseVersionResult.rows[0].server_version;

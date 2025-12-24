@@ -5,11 +5,11 @@ export type ErrorResponse = {
   status_code: number;
 };
 
-export class BaseHttpError extends Error {
-  action: string;
-  statusCode: number;
+export abstract class BaseHttpError extends Error {
+  public readonly action: string;
+  public readonly statusCode: number;
 
-  constructor({
+  protected constructor({
     message,
     action,
     statusCode,
@@ -28,7 +28,7 @@ export class BaseHttpError extends Error {
     this.statusCode = statusCode;
   }
 
-  toJSON() {
+  toJSON(): ErrorResponse {
     return {
       name: this.name,
       message: this.message,

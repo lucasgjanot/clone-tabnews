@@ -1,11 +1,11 @@
 import controller from "infra/controller";
-import { ErrorResponse, ValidationError } from "infra/errors";
+import { ValidationError } from "infra/errors";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
-import user, { PublicUser } from "models/user";
+import user, { PublicUserResponse } from "models/user";
 import activation from "models/activation";
 
-type UsersResponse = PublicUser | ErrorResponse;
+type UsersResponse = PublicUserResponse;
 
 const router = createRouter<NextApiRequest, NextApiResponse<UsersResponse>>();
 
@@ -38,5 +38,5 @@ async function postHandler(
   const newToken = await activation.create(newUser.id);
   await activation.sendEmailToUser(newUser, newToken);
 
-  res.status(201).json(user.getPublicUser(newUser));
+  res.status(201).json(user.toPublicResponse(newUser));
 }

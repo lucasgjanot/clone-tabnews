@@ -2,16 +2,29 @@ import crypto from "node:crypto";
 import database from "infra/database";
 import { UnauthorizedError } from "infra/errors";
 
-export type Session = {
+export type SessionShape<TDate> = {
   id: string;
   token: string;
   user_id: string;
-  expires_at: Date;
-  created_at: Date;
-  updated_at: Date;
+  expires_at: TDate;
+  created_at: TDate;
+  updated_at: TDate;
 };
 
+export type Session = SessionShape<Date>;
+
+export type SessionResponse = SessionShape<string>;
+
 const EXPIRATION_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000; // 30 Days
+
+function toResponse(session: Session): SessionResponse {
+  return {
+    ...session,
+    expires_at: session.expires_at.toISOString(),
+    created_at: session.created_at.toISOString(),
+    updated_at: session.updated_at.toISOString(),
+  };
+}
 
 async function expireById(sessionId: string | undefined): Promise<Session> {
   const revokedToken = await runUpdateQuery(sessionId);
@@ -129,6 +142,7 @@ const session = {
   renew,
   expireById,
   getValidSession,
+  toResponse,
   EXPIRATION_IN_MILLISECONDS,
 };
 

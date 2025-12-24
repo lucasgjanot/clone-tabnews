@@ -1,10 +1,10 @@
 import controller from "infra/controller";
-import { ErrorResponse, ValidationError } from "infra/errors";
-import user, { PublicUser } from "models/user";
+import { ValidationError } from "infra/errors";
+import user, { PublicUserResponse } from "models/user";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 
-type UsersResponse = PublicUser | ErrorResponse;
+type UsersResponse = PublicUserResponse;
 
 const router = createRouter<NextApiRequest, NextApiResponse<UsersResponse>>();
 
@@ -21,7 +21,7 @@ async function getHandler(
     throw new ValidationError({ message: "Invalid username parameter" });
   }
   const result = await user.getUserByUsername(username);
-  return res.status(200).json(user.getPublicUser(result));
+  return res.status(200).json(user.toPublicResponse(result));
 }
 
 async function patchHandler(
@@ -42,5 +42,5 @@ async function patchHandler(
     throw new ValidationError({ message: "Invalid username parameter" });
   }
   const updatedUser = await user.update(username, params);
-  return res.status(200).json(user.getPublicUser(updatedUser));
+  return res.status(200).json(user.toPublicResponse(updatedUser));
 }
