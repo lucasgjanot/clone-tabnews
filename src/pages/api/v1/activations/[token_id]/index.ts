@@ -1,5 +1,5 @@
 import controller from "infra/controller";
-import { ValidationError } from "infra/errors";
+import { ValidationError } from "infra/errors/errors";
 import activation, { ActivationTokenResponse } from "models/activation";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";

@@ -1,5 +1,5 @@
 import controller from "infra/controller";
-import { ValidationError } from "infra/errors";
+import { ValidationError } from "infra/errors/errors";
 import user, { PublicUserResponse } from "models/user";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";

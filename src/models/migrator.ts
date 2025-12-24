@@ -3,7 +3,7 @@ import { RunnerOption } from "node-pg-migrate";
 import { resolve } from "path";
 import migrationRunner from "node-pg-migrate";
 import { RunMigration } from "node-pg-migrate/dist/migration";
-import { ServiceError } from "infra/errors";
+import { ServiceError } from "infra/errors/errors";
 
 async function runMigrations(dryRun: boolean = true): Promise<RunMigration[]> {
   let dbClient;

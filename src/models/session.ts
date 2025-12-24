@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import database from "infra/database";
-import { UnauthorizedError } from "infra/errors";
+import { UnauthorizedError } from "infra/errors/errors";
+import { SessionNotFoundError } from "infra/errors/session";
 
 export type SessionShape<TDate> = {
   id: string;

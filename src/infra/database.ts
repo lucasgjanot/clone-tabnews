@@ -1,6 +1,6 @@
 import cfg from "config";
 import { Client } from "pg";
-import { ServiceError } from "./errors";
+import { ServiceError } from "./errors/errors";
 
 type QueryObject = {
   text: string;

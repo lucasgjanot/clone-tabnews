@@ -9,7 +9,8 @@ import {
   BaseHttpError,
   ServiceError,
   UnauthorizedError,
-} from "./errors";
+  ForbiddenError,
+} from "./errors/errors";
 
 function onErrorHandler(err: unknown, _: NextApiRequest, res: NextApiResponse) {
   if (err instanceof UnauthorizedError) {

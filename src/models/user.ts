@@ -1,5 +1,5 @@
 import database from "infra/database";
-import { NotFoundError, ValidationError } from "infra/errors";
+import { NotFoundError, ValidationError } from "infra/errors/errors";
 import password from "./password";
 
 export type UserShape<TDate> = {

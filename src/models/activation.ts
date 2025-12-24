@@ -2,7 +2,7 @@ import email from "infra/email";
 import user, { User } from "./user";
 import database from "infra/database";
 import webserver from "./webserver";
-import { NotFoundError } from "infra/errors";
+import { NotFoundError } from "infra/errors/errors";
 
 export type ActivationTokenShape<TDate> = {
   id: string;
