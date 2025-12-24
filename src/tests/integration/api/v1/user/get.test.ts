@@ -2,6 +2,7 @@ import session from "models/session";
 import orchestrator from "tests/orchestrator";
 import setCookieParser from "set-cookie-parser";
 import { version as uuidVersion } from "uuid";
+import { UserResponse } from "models/user";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -16,6 +17,8 @@ describe("GET /api/v1/user", () => {
         username: "UserWithValidSession",
       });
 
+      await orchestrator.activateUser(user1);
+
       const sessionObject = await orchestrator.createSession(user1.id);
 
       const response = await fetch("http://localhost:3000/api/v1/user", {
@@ -24,7 +27,7 @@ describe("GET /api/v1/user", () => {
         },
       });
 
-      const responseBody = await response.json();
+      const responseBody: UserResponse = await response.json();
 
       expect(response.status).toBe(200);
 
@@ -38,9 +41,9 @@ describe("GET /api/v1/user", () => {
         username: "UserWithValidSession",
         email: user1.email,
         password: user1.password,
-        features: ["read:activation_token"],
+        features: ["create:session", "read:session", "read:user"],
         created_at: user1.created_at.toISOString(),
-        updated_at: user1.updated_at.toISOString(),
+        updated_at: responseBody.updated_at,
       });
 
       const renewedSessionObject = await session.getValidSession(
@@ -86,7 +89,7 @@ describe("GET /api/v1/user", () => {
         },
       });
 
-      const responseBody = await response.json();
+      const responseBody: UserResponse = await response.json();
 
       expect(response.status).toBe(401);
 
@@ -133,7 +136,7 @@ describe("GET /api/v1/user", () => {
 
       expect(timeNow > sessionObject.expires_at).toBe(true);
 
-      const responseBody = await response.json();
+      const responseBody: UserResponse = await response.json();
 
       expect(response.status).toBe(401);
 
@@ -167,6 +170,8 @@ describe("GET /api/v1/user", () => {
         username: "UserWithHalfwayExpiredSession",
       });
 
+      await orchestrator.activateUser(createdUser);
+
       const sessionObject = await orchestrator.createSession(createdUser.id);
       jest.useRealTimers();
 
@@ -178,16 +183,16 @@ describe("GET /api/v1/user", () => {
 
       expect(response.status).toBe(200);
 
-      const responseBody = await response.json();
+      const responseBody: UserResponse = await response.json();
 
       expect(responseBody).toEqual({
         id: createdUser.id,
         username: "UserWithHalfwayExpiredSession",
         email: createdUser.email,
         password: createdUser.password,
-        features: ["read:activation_token"],
+        features: ["create:session", "read:session", "read:user"],
         created_at: createdUser.created_at.toISOString(),
-        updated_at: createdUser.updated_at.toISOString(),
+        updated_at: responseBody.updated_at,
       });
 
       expect(uuidVersion(responseBody.id)).toBe(4);

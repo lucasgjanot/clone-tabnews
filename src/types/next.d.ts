@@ -4,8 +4,8 @@ import { User } from "models/user"; // ajuste o path
 
 declare module "next" {
   interface NextApiRequest {
-    context?: {
-      user?: Partial<User>;
+    context: {
+      user: Partial<User>;
     };
   }
 }

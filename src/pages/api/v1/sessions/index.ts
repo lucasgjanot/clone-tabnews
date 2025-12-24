@@ -1,9 +1,10 @@
 import controller from "infra/controller";
-import { ValidationError } from "infra/errors/errors";
+import { ForbiddenError, ValidationError } from "infra/errors/errors";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import authentication from "models/authentication";
 import session, { SessionResponse } from "models/session";
+import authorization from "models/authorization";
 
 type SessionsResponse = SessionResponse;
 
@@ -37,6 +38,12 @@ async function postHandler(
     userInputValues.email,
     userInputValues.password,
   );
+  if (!authorization.can(authenticatedUser, "create:session")) {
+    throw new ForbiddenError({
+      message: "You do not have permission to log in.",
+      action: "Please contact support if you believe this is an error.",
+    });
+  }
   const newSession = await session.create(authenticatedUser.id);
   controller.setSessionCookie(newSession.token, res);
 

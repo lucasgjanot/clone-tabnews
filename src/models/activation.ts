@@ -19,7 +19,11 @@ export type ActivationTokenResponse = ActivationTokenShape<string>;
 const EXPIRATION_IN_MILLISECONDS = 60 * 15 * 1000; // 15 minutes
 
 async function activateUserByUserId(userId: string): Promise<User> {
-  const activatedUser = await user.setFeatures(userId, ["create:session"]);
+  const activatedUser = await user.setFeatures(userId, [
+    "create:session",
+    "read:session",
+    "read:user",
+  ]);
   return activatedUser;
 }
 

@@ -3,7 +3,7 @@ import orchestrator from "tests/orchestrator";
 import user from "models/user";
 import activation from "models/activation";
 import webserver from "models/webserver";
-import { Session } from "models/session";
+import { SessionResponse } from "models/session";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -15,6 +15,7 @@ beforeAll(async () => {
 describe("Use case: Registration Flow (all successful)", () => {
   let createUserResponseBody: PublicUserResponse;
   let activationTokenId: string | null;
+  let createSessionsResponseBody: SessionResponse;
   test("Create user account", async () => {
     const createUserResponse = await fetch(
       "http://localhost:3000/api/v1/users",
@@ -100,7 +101,11 @@ describe("Use case: Registration Flow (all successful)", () => {
     const activatedUser = await user.getUserByUsername(
       createUserResponseBody.username,
     );
-    expect(activatedUser.features).toEqual(["create:session"]);
+    expect(activatedUser.features).toEqual([
+      "create:session",
+      "read:session",
+      "read:user",
+    ]);
     expect(activatedUser.updated_at > activatedUser.created_at).toBe(true);
   });
   test("Login", async () => {
@@ -118,9 +123,20 @@ describe("Use case: Registration Flow (all successful)", () => {
       },
     );
     expect(createSessionsResponse.status).toBe(201);
-    const createSessionsResponseBody: Session =
-      await createSessionsResponse.json();
+    createSessionsResponseBody = await createSessionsResponse.json();
+
     expect(createSessionsResponseBody.user_id).toBe(createUserResponseBody.id);
   });
-  test("Get user information", async () => {});
+  test("Get user information", async () => {
+    await user.getUserByUserId(createUserResponseBody.id);
+    const UserinformationRequest = await fetch(
+      "http://localhost:3000/api/v1/user",
+      {
+        headers: {
+          Cookie: `session_id=${createSessionsResponseBody.token}`,
+        },
+      },
+    );
+    expect(UserinformationRequest.status).toBe(200);
+  });
 });

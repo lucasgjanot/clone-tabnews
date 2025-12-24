@@ -13,6 +13,7 @@ import {
 } from "./errors/errors";
 import user, { User } from "models/user";
 import { NextHandler } from "next-connect";
+import authorization from "models/authorization";
 
 type RequestWithContext = NextApiRequest & {
   context?: {
@@ -106,8 +107,8 @@ async function injectAnonymousOrUser(
 
 function canRequest(feature: string) {
   return (req: NextApiRequest, _: NextApiResponse, next: NextHandler) => {
-    const userFeatures = req.context?.user?.features;
-    if (!userFeatures || !userFeatures.includes(feature)) {
+    const userTryingToRequest = req.context.user as User;
+    if (!authorization.can(userTryingToRequest, feature)) {
       throw new ForbiddenError({
         message: "You do not have permission to perform this action.",
         action: `Ensure that your user account has the required feature "${feature}" before attempting this action.`,
