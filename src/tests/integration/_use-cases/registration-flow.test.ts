@@ -101,11 +101,7 @@ describe("Use case: Registration Flow (all successful)", () => {
     const activatedUser = await user.getUserByUsername(
       createUserResponseBody.username,
     );
-    expect(activatedUser.features).toEqual([
-      "create:session",
-      "read:session",
-      "read:user",
-    ]);
+    expect(activatedUser.features).toEqual(["create:session", "read:session"]);
     expect(activatedUser.updated_at > activatedUser.created_at).toBe(true);
   });
   test("Login", async () => {

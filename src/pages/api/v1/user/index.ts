@@ -7,7 +7,7 @@ import { createRouter } from "next-connect";
 const router = createRouter<NextApiRequest, NextApiResponse<UserResponse>>();
 
 router.use(controller.injectAnonymousOrUser);
-router.get(controller.canRequest("read:user"), getHandler);
+router.get(controller.canRequest("read:session"), getHandler);
 
 export default router.handler(controller.errorHandlers);
 
