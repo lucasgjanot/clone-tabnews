@@ -27,13 +27,17 @@ function toResponse(session: Session): SessionResponse {
   };
 }
 
-async function expireById(sessionId: string | undefined): Promise<Session> {
+async function expireById(sessionId: string): Promise<Session> {
+  if (!sessionId) {
+    throw new UnauthorizedError({
+      message: "User does not have an active session.",
+      action: "Verify that this user is logged in and try again.",
+    });
+  }
   const revokedToken = await runUpdateQuery(sessionId);
   return revokedToken;
 
-  async function runUpdateQuery(
-    sessionId: string | undefined,
-  ): Promise<Session> {
+  async function runUpdateQuery(sessionId: string): Promise<Session> {
     const newExpiresAt = new Date();
     const results = await database.query({
       text: `
@@ -109,12 +113,11 @@ async function renew(sessionToken: string): Promise<Session> {
 async function getValidSession(
   sessionToken: string | undefined,
 ): Promise<Session> {
+  if (!sessionToken) throw new SessionNotFoundError();
   const validSession = await runSelectQuery(sessionToken);
   return validSession;
 
-  async function runSelectQuery(
-    sessionToken: string | undefined,
-  ): Promise<Session> {
+  async function runSelectQuery(sessionToken: string): Promise<Session> {
     const results = await database.query({
       text: `
         SELECT 

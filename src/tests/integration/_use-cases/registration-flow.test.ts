@@ -3,6 +3,7 @@ import orchestrator from "tests/orchestrator";
 import user from "models/user";
 import activation from "models/activation";
 import webserver from "models/webserver";
+import { Session } from "models/session";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -102,6 +103,24 @@ describe("Use case: Registration Flow (all successful)", () => {
     expect(activatedUser.features).toEqual(["create:session"]);
     expect(activatedUser.updated_at > activatedUser.created_at).toBe(true);
   });
-  test("Login", async () => {});
+  test("Login", async () => {
+    const createSessionsResponse = await fetch(
+      "http://localhost:3000/api/v1/sessions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: "registration.flow@clone-tabnews.com.br",
+          password: "securepassword",
+        }),
+      },
+    );
+    expect(createSessionsResponse.status).toBe(201);
+    const createSessionsResponseBody: Session =
+      await createSessionsResponse.json();
+    expect(createSessionsResponseBody.user_id).toBe(createUserResponseBody.id);
+  });
   test("Get user information", async () => {});
 });

@@ -13,21 +13,26 @@ const router = createRouter<
 
 export default router.handler(controller.errorHandlers);
 
-router.patch(patchHandler);
+router.use(controller.injectAnonymousOrUser);
+router.patch(controller.canRequest("read:activation_token"), patchHandler);
 
 async function patchHandler(
   req: NextApiRequest,
   res: NextApiResponse<ActivationsResponse>,
 ) {
   const activationTokenId = req.query.token_id;
-  if (typeof activationTokenId !== "string") {
+  if (
+    !activationTokenId ||
+    activationTokenId === "undefined" ||
+    typeof activationTokenId != "string"
+  ) {
     throw new ValidationError({
       message: "Invalid activation token parameter",
     });
   }
-
   const validActivationToken =
     await activation.getValidAtivationToken(activationTokenId);
+
   const usedActivationToken =
     await activation.markTokenAsUsed(activationTokenId);
 

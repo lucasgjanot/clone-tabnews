@@ -70,7 +70,6 @@ describe("DELETE /api/v1/sessions", () => {
         headers: { Cookie: `session_id=${sessionObject.token}` },
       });
       const response1Body = await response1.json();
-
       expect(response1.status).toBe(200);
 
       expect(response1Body).toEqual({

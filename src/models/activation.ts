@@ -61,8 +61,14 @@ function toResponse(token: ActivationToken): ActivationTokenResponse {
 }
 
 async function getValidAtivationToken(
-  tokenId: string,
+  tokenId?: string,
 ): Promise<ActivationToken> {
+  if (!tokenId) {
+    throw new NotFoundError({
+      message: "Activation token not provided",
+      action: "Please register again.",
+    });
+  }
   const activationToken = await runSelectQuery(tokenId);
   return activationToken;
 
