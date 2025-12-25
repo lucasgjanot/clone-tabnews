@@ -33,10 +33,10 @@ async function patchHandler(
   const validActivationToken =
     await activation.getValidAtivationToken(activationTokenId);
 
+  await activation.activateUserByUserId(validActivationToken.user_id);
+
   const usedActivationToken =
     await activation.markTokenAsUsed(activationTokenId);
-
-  await activation.activateUserByUserId(validActivationToken.user_id);
 
   return res.status(200).json(activation.toResponse(usedActivationToken));
 }

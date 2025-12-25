@@ -2,7 +2,8 @@ import email from "infra/email";
 import user, { User } from "./user";
 import database from "infra/database";
 import webserver from "./webserver";
-import { NotFoundError } from "infra/errors/errors";
+import { ForbiddenError, NotFoundError } from "infra/errors/errors";
+import authorization from "./authorization";
 
 export type ActivationTokenShape<TDate> = {
   id: string;
@@ -19,6 +20,13 @@ export type ActivationTokenResponse = ActivationTokenShape<string>;
 const EXPIRATION_IN_MILLISECONDS = 60 * 15 * 1000; // 15 minutes
 
 async function activateUserByUserId(userId: string): Promise<User> {
+  const userToActivate = await user.getUserByUserId(userId);
+  if (!authorization.can(userToActivate, "read:activation_token")) {
+    throw new ForbiddenError({
+      message: "User account is already activated.",
+      action: "Contact support if this is unexpected.",
+    });
+  }
   const activatedUser = await user.setFeatures(userId, [
     "create:session",
     "read:session",
@@ -147,6 +155,7 @@ const activation = {
   markTokenAsUsed,
   toResponse,
   activateUserByUserId,
+  EXPIRATION_IN_MILLISECONDS,
 };
 
 export default activation;
